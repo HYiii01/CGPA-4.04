@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from app.config import STATIC_DIR
+from config import STATIC_DIR
 from app.routers import api, pages
 
 

@@ -1,0 +1,18 @@
+/* Project-level styling scaffold.
+   Kept intentionally light to avoid disturbing the existing UI.
+*/
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, "Segoe UI", sans-serif;
+  background: #f8fafc;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}

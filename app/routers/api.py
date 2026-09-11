@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException
 
-from app.schemas import FlightDelayRequest, FlightStatusWebhook, LocationUpdate, VoteRequest
+from schemas import FlightDelayRequest, FlightStatusWebhook, LocationUpdate, VoteRequest
 from app.services.trip_service import (
     analyze_flight_delay as analyze_delay,
     cast_vote as add_vote,
