@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CGPA 4.04 — Multimodal Receipt Split Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            canvas: '#F8F9FA',
+            surface: '#FFFFFF',
+            forest: {
+              DEFAULT: '#1E3F20',
+              hover: '#162F18',
+              light: '#EEF5EF',
+              border: '#C2D9C5',
+              subtle: '#3B6B40'
+            },
+            slateText: {
+              primary: '#0F172A',
+              secondary: '#64748B',
+              muted: '#94A3B8',
+            },
+            stroke: '#E2E8F0',
+            warning: '#C56A5A'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #F8F9FA;
+      color: #0F172A;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .thermal-paper {
+      background: linear-gradient(180deg, #FBFBF9 0%, #FAF8F5 100%);
+      box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+    }
+    .ocr-box {
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .ocr-box:hover, .ocr-box.active {
+      background-color: rgba(30, 63, 32, 0.12);
+      border-color: #1E3F20;
+      box-shadow: 0 0 0 1px #1E3F20;
+    }
+    .item-card {
+      transition: all 0.15s ease;
+    }
+    .item-card.highlighted {
+      border-color: #1E3F20;
+      background-color: #FAFCFA;
+      box-shadow: 0 0 0 1px #1E3F20;
+    }
+    .zigzag-edge {
+      background: radial-gradient(circle, transparent, transparent 50%, #FAF8F5 50%, #FAF8F5 100%);
+      background-size: 10px 10px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased select-none">
+
+  <!-- TOP GLOBAL NAVIGATION (72px) -->
+  <header class="h-[72px] bg-white border-b border-stroke sticky top-0 z-50 px-8 flex items-center justify-between">
+    <!-- Left: Brand + Nav tabs -->
+    <div class="flex items-center gap-6">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-forest text-white flex items-center justify-center font-bold text-sm tracking-tight shadow-sm">
+          4.04
+        </div>
+        <div class="flex items-baseline gap-2">
+          <span class="font-bold text-base tracking-tight text-slateText-primary">CGPA 4.04</span>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-forest-light text-forest font-semibold border border-forest-border">Split Studio</span>
+        </div>
+      </div>
+
+      <div class="h-5 w-px bg-stroke"></div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex items-center gap-1.5">
+        <a href="/map" class="px-3.5 py-1.5 rounded-lg text-sm font-medium text-slateText-secondary hover:text-slateText-primary hover:bg-slate-50 transition">Itinerary</a>
+        <a href="/home" class="px-3.5 py-1.5 rounded-lg text-sm font-medium text-slateText-secondary hover:text-slateText-primary hover:bg-slate-50 transition">Decisions &amp; Polls</a>
+        <a href="/ai" class="px-3.5 py-1.5 rounded-lg text-sm font-medium text-slateText-secondary hover:text-slateText-primary hover:bg-slate-50 transition">AI Pivot</a>
+        <a href="/budget" class="px-3.5 py-1.5 rounded-lg text-sm font-semibold bg-forest-light text-forest border border-forest-border/60 transition">Budget &amp; Analytics</a>
+      </nav>
+    </div>
+
+    <!-- Right: Trip context + Member presence + Budget -->
+    <div class="flex items-center gap-5">
+      <div class="flex flex-col items-end">
+        <span class="text-xs font-semibold text-slateText-primary">Penang Sprint</span>
+        <span class="text-[11px] text-slateText-muted">Oct 14–16 · George Town</span>
+      </div>
+
+      <!-- 4 Member Avatars with Online Ring -->
+      <div class="flex items-center -space-x-1.5">
+        <div class="relative group cursor-pointer" title="You (Ryan)">
+          <span class="w-7 h-7 rounded-full bg-forest text-white text-[10px] font-bold flex items-center justify-center border-2 border-white">YO</span>
+          <span class="absolute bottom-0 right-0 w-2 h-2 bg-emerald-500 rounded-full border border-white"></span>
+        </div>
+        <div class="relative group cursor-pointer" title="Marcus Tan">
+          <span class="w-7 h-7 rounded-full bg-slate-700 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white">MT</span>
+          <span class="absolute bottom-0 right-0 w-2 h-2 bg-emerald-500 rounded-full border border-white"></span>
+        </div>
+        <div class="relative group cursor-pointer" title="Aina Zulaikha">
+          <span class="w-7 h-7 rounded-full bg-emerald-800 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white">AZ</span>
+          <span class="absolute bottom-0 right-0 w-2 h-2 bg-emerald-500 rounded-full border border-white"></span>
+        </div>
+        <div class="relative group cursor-pointer" title="Jason Ong">
+          <span class="w-7 h-7 rounded-full bg-amber-700 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white">JO</span>
+          <span class="absolute bottom-0 right-0 w-2 h-2 bg-emerald-500 rounded-full border border-white"></span>
+        </div>
+      </div>
+
+      <!-- Budget Capsule -->
+      <div class="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-white border border-stroke text-xs font-medium shadow-xs">
+        <div class="w-12 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+          <div class="h-full bg-forest rounded-full" style="width: 68.9%"></div>
+        </div>
+        <span class="font-semibold text-slateText-primary">RM 1,240</span>
+        <span class="text-slateText-muted">/ RM 1,800</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN WRAPPER (1376px max-width container, 1440 × 900 layout design) -->
+  <main class="w-full max-w-[1376px] mx-auto px-8 py-5 flex-1 flex flex-col justify-start">
+    
+    <!-- PAGE HEADER -->
+    <div class="flex items-end justify-between mb-5">
+      <div>
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-[11px] font-bold tracking-wider uppercase text-forest bg-forest-light px-2 py-0.5 rounded">EXPENSE PROCESSING</span>
+          <span class="text-xs text-slateText-muted">Session ID: REC-20231015-0842</span>
+        </div>
+        <h1 class="text-2xl font-bold tracking-tight text-slateText-primary">Multimodal Receipt Split Studio</h1>
+        <p class="text-xs text-slateText-secondary mt-0.5">Review the computer vision scan, map items to diners, and reconcile the shared table total.</p>
+      </div>
+
+      <!-- Header actions -->
+      <div class="flex items-center gap-2.5">
+        <button class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slateText-secondary hover:text-slateText-primary bg-white border border-stroke rounded-lg hover:bg-slate-50 transition shadow-2xs">
+          <svg class="w-3.5 h-3.5 text-slateText-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+          Upload Raw Image
+        </button>
+        <button class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-forest bg-forest-light border border-forest-border hover:bg-forest/10 rounded-lg transition shadow-2xs">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Scan Another Bill
+        </button>
+      </div>
+    </div>
+
+    <!-- MAIN TWO-COLUMN WORKSPACE: 45% (Left Inspector) / 55% (Right Item Attribution) -->
+    <div class="grid grid-cols-12 gap-6 items-start flex-1 mb-4">
+      
+      <!-- ============================================================ -->
+      <!-- LEFT: RECEIPT INSPECTOR (45% -> 5 cols or 5.4 / 12) -->
+      <!-- ============================================================ -->
+      <div class="col-span-12 lg:col-span-5 bg-white border border-stroke rounded-2xl p-5 shadow-sm flex flex-col">
+        
+        <!-- Header & OCR Status -->
+        <div class="flex items-center justify-between pb-3 border-b border-stroke mb-3.5">
+          <div class="flex items-center gap-2">
+            <div class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></div>
+            <span class="text-xs font-bold text-slateText-primary">Receipt Scan</span>
+            <span class="text-[11px] text-slateText-muted">· Kedai Kopi Ping Hooi</span>
+          </div>
+
+          <div class="flex items-center gap-1.5">
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+              <svg class="w-3 h-3 mr-1 text-emerald-700" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              High Confidence OCR (3/3)
+            </span>
+          </div>
+        </div>
+
+        <!-- OCR Toolbar -->
+        <div class="flex items-center justify-between px-3 py-1.5 mb-3 bg-slate-50 border border-stroke rounded-lg text-xs text-slateText-secondary">
+          <div class="flex items-center gap-3">
+            <span class="text-[11px] font-medium text-slateText-primary flex items-center gap-1">
+              <svg class="w-3.5 h-3.5 text-forest" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              Gemini Vision 1.5 Pro
+            </span>
+            <span class="text-[10px] text-slateText-muted">Skew: -0.8° corrected</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <button class="p-1 hover:bg-white hover:border-stroke border border-transparent rounded text-slateText-secondary hover:text-slateText-primary transition" title="Zoom In">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"/></svg>
+            </button>
+            <button class="p-1 hover:bg-white hover:border-stroke border border-transparent rounded text-slateText-secondary hover:text-slateText-primary transition" title="Rotate">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            </button>
+            <button class="p-1 hover:bg-white hover:border-stroke border border-transparent rounded text-slateText-secondary hover:text-slateText-primary transition" title="Reset View">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- PHYSICAL THERMAL RECEIPT SCAN PREVIEW (Realistic document surface) -->
+        <div class="relative bg-slate-100/90 rounded-xl p-4 border border-dashed border-slate-300 flex items-center justify-center overflow-hidden">
+          
+          <!-- Realistic Thermal Receipt Sheet with bounding overlays -->
+          <div class="thermal-paper w-[330px] rounded-sm p-4 font-mono text-[11px] text-slate-800 relative border border-slate-200/80 shadow-md">
+            
+            <!-- Receipt Header -->
+            <div class="text-center pb-2.5 border-b border-dashed border-slate-300">
+              <div class="font-bold tracking-wider text-xs uppercase text-slate-900">KEDAI KOPI PING HOOI</div>
+              <div class="text-[9.5px] text-slate-500 mt-0.5">Tiger Char Kway Teow · Lebuh Carnarvon</div>
+              <div class="text-[9.5px] text-slate-500">George Town, 10100 Penang</div>
+              <div class="flex justify-between text-[9px] text-slate-400 mt-2 px-1">
+                <span>INV-20231015-0842</span>
+                <span>15 OCT 2023 · 10:14 AM</span>
+              </div>
+              <div class="flex justify-between text-[9px] text-slate-400 px-1">
+                <span>TABLE: 06 (Indoor)</span>
+                <span>CASHIER: STN-02</span>
+              </div>
+            </div>
+
+            <!-- Receipt Line Items with SVG/CSS OCR Bounding Boxes -->
+            <div class="py-3 space-y-2 border-b border-dashed border-slate-300 relative">
+              
+              <!-- ITEM 1: Char Kway Teow -->
+              <div id="ocr-box-1" class="ocr-box relative p-1.5 rounded border border-forest/80 bg-forest/5 cursor-pointer group" onclick="selectItem(1)">
+                <div class="flex justify-between items-start font-medium">
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-4 h-4 rounded-full bg-forest text-white text-[9px] font-bold flex items-center justify-center">1</span>
+                    <span>1x Char Kway Teow (Duck Egg)</span>
+                  </div>
+                  <span class="font-bold text-slate-900">12.00</span>
+                </div>
+                <!-- OCR Floating Confidence Badge -->
+                <div class="flex items-center justify-between mt-1 text-[9px] text-forest font-semibold">
+                  <span class="bg-white/90 px-1 py-0.2 rounded border border-forest/30">OCR 99% · BBox [142, 28, 480, 52]</span>
+                  <span class="text-[9.5px] text-slate-600">RM 12.00</span>
+                </div>
+              </div>
+
+              <!-- ITEM 2: Penang Assam Laksa -->
+              <div id="ocr-box-2" class="ocr-box relative p-1.5 rounded border border-forest/80 bg-forest/5 cursor-pointer group" onclick="selectItem(2)">
+                <div class="flex justify-between items-start font-medium">
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-4 h-4 rounded-full bg-forest text-white text-[9px] font-bold flex items-center justify-center">2</span>
+                    <span>1x Penang Assam Laksa</span>
+                  </div>
+                  <span class="font-bold text-slate-900">9.50</span>
+                </div>
+                <!-- OCR Floating Confidence Badge -->
+                <div class="flex items-center justify-between mt-1 text-[9px] text-forest font-semibold">
+                  <span class="bg-white/90 px-1 py-0.2 rounded border border-forest/30">OCR 98% · BBox [142, 56, 480, 80]</span>
+                  <span class="text-[9.5px] text-slate-600">RM 9.50</span>
+                </div>
+              </div>
+
+              <!-- ITEM 3: Iced Nutmeg Cooler -->
+              <div id="ocr-box-3" class="ocr-box relative p-1.5 rounded border border-forest/80 bg-forest/5 cursor-pointer group" onclick="selectItem(3)">
+                <div class="flex justify-between items-start font-medium">
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-4 h-4 rounded-full bg-forest text-white text-[9px] font-bold flex items-center justify-center">3</span>
+                    <span>1x Iced Nutmeg Cooler</span>
+                  </div>
+                  <span class="font-bold text-slate-900">4.00</span>
+                </div>
+                <!-- OCR Floating Confidence Badge -->
+                <div class="flex items-center justify-between mt-1 text-[9px] text-forest font-semibold">
+                  <span class="bg-white/90 px-1 py-0.2 rounded border border-forest/30">OCR 96% · BBox [142, 84, 480, 108]</span>
+                  <span class="text-[9.5px] text-slate-600">RM 4.00</span>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Receipt Subtotal & Total -->
+            <div class="py-2.5 space-y-1 text-[10px] text-slate-600">
+              <div class="flex justify-between">
+                <span>SUBTOTAL (3 items)</span>
+                <span>RM 25.50</span>
+              </div>
+              <div class="flex justify-between text-slate-400">
+                <span>SST (Service Tax 0%)</span>
+                <span>RM 0.00</span>
+              </div>
+              <div class="flex justify-between font-bold text-slate-900 text-xs pt-1 border-t border-slate-300">
+                <span>TOTAL BILLED</span>
+                <span>RM 25.50</span>
+              </div>
+              <div class="flex justify-between text-[9px] text-slate-400 pt-0.5">
+                <span>PAID VIA TOUCH 'N GO EWALLET</span>
+                <span>TRANS: #99021-P</span>
+              </div>
+            </div>
+
+            <!-- Barcode Mockup -->
+            <div class="pt-2 text-center border-t border-dashed border-slate-200">
+              <div class="h-5 flex items-center justify-center gap-0.5 opacity-40">
+                <div class="w-1 h-full bg-black"></div><div class="w-0.5 h-full bg-black"></div><div class="w-1.5 h-full bg-black"></div><div class="w-0.5 h-full bg-black"></div><div class="w-2 h-full bg-black"></div><div class="w-1 h-full bg-black"></div><div class="w-0.5 h-full bg-black"></div><div class="w-1.5 h-full bg-black"></div><div class="w-2 h-full bg-black"></div><div class="w-0.5 h-full bg-black"></div><div class="w-1 h-full bg-black"></div>
+              </div>
+              <span class="text-[8px] text-slate-400 tracking-widest mt-0.5 block">THANK YOU FOR VISITING PENANG</span>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Receipt Actions Bottom Bar -->
+        <div class="mt-3.5 pt-3 border-t border-stroke flex items-center justify-between text-xs">
+          <div class="flex items-center gap-2">
+            <button class="px-2.5 py-1.5 text-xs font-medium text-slateText-secondary hover:text-slateText-primary bg-slate-50 hover:bg-slate-100 border border-stroke rounded-md transition">
+              Retake Scan
+            </button>
+            <button class="px-2.5 py-1.5 text-xs font-medium text-slateText-secondary hover:text-slateText-primary hover:bg-slate-50 rounded-md transition">
+              Adjust Bounding Boxes
+            </button>
+          </div>
+          <span class="text-[11px] text-slateText-muted">Auto-parsed in 0.84s</span>
+        </div>
+
+      </div>
+
+      <!-- ============================================================ -->
+      <!-- RIGHT: DISH ATTRIBUTION & SHARE ENGINE (55% -> 7 cols) -->
+      <!-- ============================================================ -->
+      <div class="col-span-12 lg:col-span-7 flex flex-col gap-4">
+
+        <!-- Top Member Legend / Master Selector Card -->
+        <div class="bg-white border border-stroke rounded-xl p-4 shadow-xs">
+          <div class="flex items-center justify-between mb-2.5">
+            <div>
+              <h2 class="text-xs font-bold text-slateText-primary uppercase tracking-wider">Group Roster &amp; Quick Assign</h2>
+              <p class="text-[11px] text-slateText-secondary">Tap any avatar on a dish card to include or exclude that traveler from the split.</p>
+            </div>
+            <span class="text-[11px] font-semibold text-forest bg-forest-light px-2.5 py-1 rounded-full border border-forest-border">
+              4 of 4 synced at table
+            </span>
+          </div>
+
+          <!-- 4 Member Cards with dynamic totals -->
+          <div class="grid grid-cols-4 gap-2.5">
+            <!-- Member 1: You -->
+            <div class="p-2 rounded-lg border border-forest bg-forest-light/60 flex items-center gap-2.5 transition">
+              <span class="w-7 h-7 rounded-full bg-forest text-white text-[10px] font-bold flex items-center justify-center shrink-0">YO</span>
+              <div class="min-w-0">
+                <div class="text-xs font-semibold text-forest leading-tight truncate">You (Ryan)</div>
+                <div id="badge-share-you" class="text-[11px] font-bold text-forest">RM 10.00</div>
+              </div>
+            </div>
+
+            <!-- Member 2: Marcus -->
+            <div class="p-2 rounded-lg border border-slate-300 bg-slate-50/70 flex items-center gap-2.5 transition">
+              <span class="w-7 h-7 rounded-full bg-slate-700 text-white text-[10px] font-bold flex items-center justify-center shrink-0">MT</span>
+              <div class="min-w-0">
+                <div class="text-xs font-semibold text-slate-900 leading-tight truncate">Marcus</div>
+                <div id="badge-share-marcus" class="text-[11px] font-bold text-slate-800">RM 10.75</div>
+              </div>
+            </div>
+
+            <!-- Member 3: Aina -->
+            <div class="p-2 rounded-lg border border-slate-300 bg-slate-50/70 flex items-center gap-2.5 transition">
+              <span class="w-7 h-7 rounded-full bg-emerald-800 text-white text-[10px] font-bold flex items-center justify-center shrink-0">AZ</span>
+              <div class="min-w-0">
+                <div class="text-xs font-semibold text-slate-900 leading-tight truncate">Aina</div>
+                <div id="badge-share-aina" class="text-[11px] font-bold text-slate-800">RM 4.75</div>
+              </div>
+            </div>
+
+            <!-- Member 4: Jason -->
+            <div class="p-2 rounded-lg border border-slate-200 bg-white opacity-60 flex items-center gap-2.5 transition">
+              <span class="w-7 h-7 rounded-full bg-amber-700 text-white text-[10px] font-bold flex items-center justify-center shrink-0">JO</span>
+              <div class="min-w-0">
+                <div class="text-xs font-medium text-slate-600 leading-tight truncate">Jason</div>
+                <div id="badge-share-jason" class="text-[11px] font-medium text-slate-400">RM 0.00</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LINE ITEM ATTRIBUTION CARDS -->
+        <div class="space-y-3">
+          
+          <!-- ITEM CARD 1: Char Kway Teow -->
+          <div id="item-card-1" class="item-card bg-white border border-stroke rounded-xl p-4 shadow-xs relative transition" onmouseenter="highlightOcr(1)" onmouseleave="unhighlightOcr(1)">
+            <div class="flex items-start justify-between">
+              <div class="flex items-center gap-2.5">
+                <span class="w-5 h-5 rounded-md bg-forest-light text-forest text-xs font-bold flex items-center justify-center border border-forest-border">1</span>
+                <div>
+                  <h3 class="text-sm font-semibold text-slateText-primary">Char Kway Teow (Duck Egg)</h3>
+                  <span class="text-[11px] text-slateText-muted">Street Stall · Signature Dish</span>
+                </div>
+              </div>
+
+              <!-- Price & Split Mode -->
+              <div class="flex items-center gap-3">
+                <div class="text-right">
+                  <div class="text-sm font-bold text-slateText-primary">RM 12.00</div>
+                  <div class="text-[10px] text-slateText-muted">Total item cost</div>
+                </div>
+
+                <!-- Split Method Selector -->
+                <div class="inline-flex rounded-lg border border-stroke bg-slate-50 p-0.5 text-xs font-medium">
+                  <button class="px-2 py-1 rounded bg-white text-forest font-semibold shadow-2xs">Equal</button>
+                  <button class="px-2 py-1 rounded text-slateText-secondary hover:text-slateText-primary">Solo</button>
+                  <button class="px-2 py-1 rounded text-slateText-secondary hover:text-slateText-primary">Custom</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Diner Chips & Mathematical Formula -->
+            <div class="mt-3.5 pt-3 border-t border-stroke/70 flex items-center justify-between">
+              
+              <!-- Diners Selection Chips -->
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-slateText-secondary font-medium">Diners:</span>
+                
+                <!-- Chip: You (Selected) -->
+                <button onclick="toggleDiner(1, 'you')" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-forest bg-forest-light text-forest text-xs font-semibold shadow-2xs hover:bg-forest/10 transition">
+                  <span class="w-3.5 h-3.5 rounded-full bg-forest text-white text-[8px] flex items-center justify-center">✓</span>
+                  You
+                </button>
+
+                <!-- Chip: Marcus (Selected) -->
+                <button onclick="toggleDiner(1, 'marcus')" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-forest bg-forest-light text-forest text-xs font-semibold shadow-2xs hover:bg-forest/10 transition">
+                  <span class="w-3.5 h-3.5 rounded-full bg-forest text-white text-[8px] flex items-center justify-center">✓</span>
+                  Marcus
+                </button>
+
+                <!-- Chip: Aina (Unselected) -->
+                <button onclick="toggleDiner(1, 'aina')" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-stroke bg-white text-slateText-secondary hover:border-slate-300 text-xs font-medium transition">
+                  + Aina
+                </button>
+
+                <!-- Chip: Jason (Unselected) -->
+                <button onclick="toggleDiner(1, 'jason')" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-stroke bg-white text-slateText-secondary hover:border-slate-300 text-xs font-medium transition">
+                  + Jason
+                </button>
+              </div>
+
+              <!-- Mathematical Breakdown -->
+              <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-stroke text-xs">
+                <span class="text-slateText-secondary font-mono">RM 12.00 ÷ 2 =</span>
+                <span class="font-bold text-forest font-mono text-sm">RM 6.00 each</span>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ITEM CARD 2: Penang Assam Laksa -->
+          <div id="item-card-2" class="item-card bg-white border border-stroke rounded-xl p-4 shadow-xs relative transition" onmouseenter="highlightOcr(2)" onmouseleave="unhighlightOcr(2)">
+            <div class="flex items-start justify-between">
+              <div class="flex items-center gap-2.5">
+                <span class="w-5 h-5 rounded-md bg-forest-light text-forest text-xs font-bold flex items-center justify-center border border-forest-border">2</span>
+                <div>
+                  <h3 class="text-sm font-semibold text-slateText-primary">Penang Assam Laksa</h3>
+                  <span class="text-[11px] text-slateText-muted">Tamarind Broth · Mackerel Flakes</span>
+                </div>
+              </div>
+
+              <!-- Price & Split Mode -->
+              <div class="flex items-center gap-3">
+                <div class="text-right">
+                  <div class="text-sm font-bold text-slateText-primary">RM 9.50</div>
+                  <div class="text-[10px] text-slateText-muted">Total item cost</div>
+                </div>
+
+                <!-- Split Method Selector -->
+                <div class="inline-flex rounded-lg border border-stroke bg-slate-50 p-0.5 text-xs font-medium">
+                  <button class="px-2 py-1 rounded bg-white text-forest font-semibold shadow-2xs">Equal</button>
+                  <button class="px-2 py-1 rounded text-slateText-secondary hover:text-slateText-primary">Solo</button>
+                  <button class="px-2 py-1 rounded text-slateText-secondary hover:text-slateText-primary">Custom</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Diner Chips & Mathematical Formula -->
+            <div class="mt-3.5 pt-3 border-t border-stroke/70 flex items-center justify-between">
+              
+              <!-- Diners Selection Chips -->
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-slateText-secondary font-medium">Diners:</span>
+                
+                <!-- Chip: You (Unselected - User Share RM 0.00) -->
+                <button onclick="toggleDiner(2, 'you')" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-stroke bg-white text-slateText-muted hover:border-slate-300 text-xs font-medium transition" title="You did not have this dish">
+                  + You (RM 0.00)
+                </button>
+
+                <!-- Chip: Marcus (Selected) -->
+                <button onclick="toggleDiner(2, 'marcus')" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-forest bg-forest-light text-forest text-xs font-semibold shadow-2xs hover:bg-forest/10 transition">
+                  <span class="w-3.5 h-3.5 rounded-full bg-forest text-white text-[8px] flex items-center justify-center">✓</span>
+                  Marcus
+                </button>
+
+                <!-- Chip: Aina (Selected) -->
+                <button onclick="toggleDiner(2, 'aina')" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-forest bg-forest-light text-forest text-xs font-semibold shadow-2xs hover:bg-forest/10 transition">
+                  <span class="w-3.5 h-3.5 rounded-full bg-forest text-white text-[8px] flex items-center justify-center">✓</span>
+                  Aina
+                </button>
+
+                <!-- Chip: Jason (Unselected) -->
+                <button onclick="toggleDiner(2, 'jason')" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-stroke bg-white text-slateText-secondary hover:border-slate-300 text-xs font-medium transition">
+                  + Jason
+                </button>
+              </div>
+
+              <!-- Mathematical Breakdown -->
+              <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-stroke text-xs">
+                <span class="text-slateText-secondary font-mono">RM 9.50 ÷ 2 =</span>
+                <span class="font-bold text-forest font-mono text-sm">RM 4.75 each</span>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ITEM CARD 3: Iced Nutmeg Cooler -->
+          <div id="item-card-3" class="item-card bg-white border border-stroke rounded-xl p-4 shadow-xs relative transition" onmouseenter="highlightOcr(3)" onmouseleave="unhighlightOcr(3)">
+            <div class="flex items-start justify-between">
+              <div class="flex items-center gap-2.5">
+                <span class="w-5 h-5 rounded-md bg-forest-light text-forest text-xs font-bold flex items-center justify-center border border-forest-border">3</span>
+                <div>
+                  <h3 class="text-sm font-semibold text-slateText-primary">Iced Nutmeg Cooler (Air Buah Pala)</h3>
+                  <span class="text-[11px] text-slateText-muted">Penang Specialty Herb Beverage</span>
+                </div>
+              </div>
+
+              <!-- Price & Split Mode -->
+              <div class="flex items-center gap-3">
+                <div class="text-right">
+                  <div class="text-sm font-bold text-slateText-primary">RM 4.00</div>
+                  <div class="text-[10px] text-slateText-muted">Total item cost</div>
+                </div>
+
+                <!-- Split Method Selector -->
+                <div class="inline-flex rounded-lg border border-stroke bg-slate-50 p-0.5 text-xs font-medium">
+                  <button class="px-2 py-1 rounded text-slateText-secondary hover:text-slateText-primary">Equal</button>
+                  <button class="px-2 py-1 rounded bg-white text-forest font-semibold shadow-2xs">Solo</button>
+                  <button class="px-2 py-1 rounded text-slateText-secondary hover:text-slateText-primary">Custom</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Diner Chips & Mathematical Formula -->
+            <div class="mt-3.5 pt-3 border-t border-stroke/70 flex items-center justify-between">
+              
+              <!-- Diners Selection Chips -->
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-slateText-secondary font-medium">Diners:</span>
+                
+                <!-- Chip: You (Selected Solo) -->
+                <button onclick="toggleDiner(3, 'you')" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-forest bg-forest-light text-forest text-xs font-semibold shadow-2xs hover:bg-forest/10 transition">
+                  <span class="w-3.5 h-3.5 rounded-full bg-forest text-white text-[8px] flex items-center justify-center">✓</span>
+                  You (Personal Drink)
+                </button>
+
+                <!-- Chip: Marcus (Unselected) -->
+                <button onclick="toggleDiner(3, 'marcus')" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-stroke bg-white text-slateText-secondary hover:border-slate-300 text-xs font-medium transition">
+                  + Marcus
+                </button>
+
+                <!-- Chip: Aina (Unselected) -->
+                <button onclick="toggleDiner(3, 'aina')" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-stroke bg-white text-slateText-secondary hover:border-slate-300 text-xs font-medium transition">
+                  + Aina
+                </button>
+
+                <!-- Chip: Jason (Unselected) -->
+                <button onclick="toggleDiner(3, 'jason')" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-stroke bg-white text-slateText-secondary hover:border-slate-300 text-xs font-medium transition">
+                  + Jason
+                </button>
+              </div>
+
+              <!-- Mathematical Breakdown -->
+              <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-stroke text-xs">
+                <span class="text-slateText-secondary font-mono">Solo item =</span>
+                <span class="font-bold text-forest font-mono text-sm">RM 4.00 (You)</span>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- STICKY RECONCILIATION & COMMIT PANEL -->
+        <!-- ============================================================ -->
+        <div class="bg-white border border-stroke rounded-2xl p-4 shadow-sm mt-1">
+          
+          <!-- Reconciliation Bar -->
+          <div class="flex items-center justify-between pb-3 border-b border-stroke">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+              <span class="text-xs font-bold uppercase tracking-wider text-slateText-primary">Reconciliation Status</span>
+              <span class="text-xs font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                100% Balanced · Ready to commit
+              </span>
+            </div>
+
+            <!-- Mathematical equality check -->
+            <div class="flex items-center gap-3 text-xs">
+              <span class="text-slateText-muted">Total Reconciled:</span>
+              <span class="font-bold font-mono text-slateText-primary">RM 25.50</span>
+              <span class="text-slateText-muted">/</span>
+              <span class="font-bold font-mono text-forest">RM 25.50</span>
+            </div>
+          </div>
+
+          <!-- Live Traveler Split Breakdown -->
+          <div class="py-3.5 grid grid-cols-4 gap-3 text-center border-b border-stroke/70">
+            <!-- You -->
+            <div class="p-2 rounded-xl bg-forest-light border border-forest-border flex flex-col">
+              <span class="text-[11px] font-semibold text-forest">Your Total Share</span>
+              <span class="text-lg font-bold text-forest font-mono mt-0.5">RM 10.00</span>
+              <span class="text-[10px] text-forest-subtle mt-0.5">CKT (6.00) + Nutmeg (4.00)</span>
+            </div>
+
+            <!-- Marcus -->
+            <div class="p-2 rounded-xl bg-slate-50 border border-stroke flex flex-col">
+              <span class="text-[11px] font-semibold text-slate-800">Marcus Owes</span>
+              <span class="text-lg font-bold text-slate-900 font-mono mt-0.5">RM 10.75</span>
+              <span class="text-[10px] text-slateText-muted mt-0.5">CKT (6.00) + Laksa (4.75)</span>
+            </div>
+
+            <!-- Aina -->
+            <div class="p-2 rounded-xl bg-slate-50 border border-stroke flex flex-col">
+              <span class="text-[11px] font-semibold text-slate-800">Aina Owes</span>
+              <span class="text-lg font-bold text-slate-900 font-mono mt-0.5">RM 4.75</span>
+              <span class="text-[10px] text-slateText-muted mt-0.5">Laksa (4.75)</span>
+            </div>
+
+            <!-- Jason -->
+            <div class="p-2 rounded-xl bg-slate-50/50 border border-dashed border-stroke flex flex-col opacity-60">
+              <span class="text-[11px] font-semibold text-slate-500">Jason Owes</span>
+              <span class="text-lg font-bold text-slate-400 font-mono mt-0.5">RM 0.00</span>
+              <span class="text-[10px] text-slate-400 mt-0.5">No items assigned</span>
+            </div>
+          </div>
+
+          <!-- Bottom Actions & Audit Trail -->
+          <div class="pt-3 flex items-center justify-between">
+            <div class="flex items-center gap-2 text-xs text-slateText-muted">
+              <svg class="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+              <span>Net settlement updates Marcus's debt to <strong>RM 14.50</strong></span>
+            </div>
+
+            <div class="flex items-center gap-2.5">
+              <button class="px-3.5 py-2 rounded-lg text-xs font-semibold text-slateText-secondary hover:text-slateText-primary bg-white border border-stroke hover:bg-slate-50 transition">
+                Save Draft
+              </button>
+              <button onclick="commitExpense()" class="px-5 py-2 rounded-lg text-xs font-semibold text-white bg-forest hover:bg-forest-hover transition shadow-sm flex items-center gap-2">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                Commit to Ledger
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- SUBTLE FOOTER AUDIT STRIP -->
+    <div class="border-t border-stroke pt-2.5 pb-2 flex items-center justify-between text-[11px] text-slateText-muted">
+      <div class="flex items-center gap-4">
+        <span>● OCR Vision Model: v2.4 Penang F&amp;B Engine</span>
+        <span>● Currency: Malaysian Ringgit (MYR / RM)</span>
+        <span>● Quorum: 4/4 auto-notified via Webhook</span>
+      </div>
+      <div>
+        <span>CGPA 4.04 Collaborative Group Travel Workspace · Penang Sprint</span>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- INTERACTIVE JS CONTROLS -->
+  <script src="/static/js/budget.js"></script>
+
+</body>
+</html>

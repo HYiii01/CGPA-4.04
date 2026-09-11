@@ -1,7 +1,654 @@
-{% extends "base.html" %}
-{% block content %}
-    <div class="bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-2xl font-semibold mb-4">Welcome to the Home Page</h2>
-        <p class="text-gray-700">This is the home page of our application. You can navigate to other pages using the links provided.</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TripPOP | Collaborative Travel Planner</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<style>
+    :root{
+        --brand:#4f46e5; --brand-dark:#3730a3; --ink:#172033; --muted:#64748b;
+        --surface:#fff; --bg:#f5f7fb; --line:#e5e7eb; --success:#059669; --danger:#dc2626;
+    }
+    *{box-sizing:border-box}
+    body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--ink)}
+    button,input,select{font:inherit}
+    .glass{background:rgba(255,255,255,.86);backdrop-filter:blur(16px);border-bottom:1px solid rgba(226,232,240,.9)}
+    .card{background:#fff;border:1px solid var(--line);box-shadow:0 12px 35px -20px rgba(15,23,42,.22)}
+    .nav-btn.active{background:#eef2ff;color:var(--brand);box-shadow:inset 0 0 0 1px #c7d2fe}
+    .hide-scroll::-webkit-scrollbar{display:none}.hide-scroll{scrollbar-width:none}
+    .route-section{animation:fadeIn .28s ease-out}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    .toast{animation:toastIn .25s ease-out}
+    @keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+    .modal-backdrop{background:rgba(15,23,42,.48);backdrop-filter:blur(5px)}
+    .modal{animation:modalIn .2s ease-out}
+    @keyframes modalIn{from{opacity:0;transform:scale(.97) translateY(8px)}to{opacity:1;transform:none}}
+    .expense-row:hover{background:#f8fafc}
+    .progress{height:9px;border-radius:999px;background:#e2e8f0;overflow:hidden}
+    .progress>span{display:block;height:100%;border-radius:inherit;transition:width .35s ease}
+    .soft-input{background:#f8fafc;border:1px solid #e2e8f0}
+    .soft-input:focus{background:#fff;border-color:#a5b4fc;outline:0;box-shadow:0 0 0 4px rgba(99,102,241,.10)}
+    #route-documents,#route-checklist{display:none!important}
+    .split-item{transition:border-color .2s ease,box-shadow .2s ease}.split-item:hover{border-color:#a5b4fc;box-shadow:0 10px 24px -18px rgba(79,70,229,.55)}
+    .split-mode{min-width:64px}.vote-option{transition:transform .2s ease,box-shadow .2s ease}.vote-option:hover{transform:translateY(-2px);box-shadow:0 12px 24px -18px rgba(15,23,42,.45)}
+    .live-map-canvas{background-color:#e8eef5;background-image:linear-gradient(26deg,transparent 46%,rgba(255,255,255,.9) 47%,rgba(255,255,255,.9) 53%,transparent 54%),linear-gradient(112deg,transparent 47%,rgba(255,255,255,.75) 48%,rgba(255,255,255,.75) 52%,transparent 53%),linear-gradient(rgba(148,163,184,.13) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,184,.13) 1px,transparent 1px);background-size:100% 100%,100% 100%,46px 46px,46px 46px}
+    .live-marker{position:absolute;transform:translate(-50%,-50%);z-index:3}.live-marker::before{content:"";position:absolute;inset:-9px;border-radius:999px;background:currentColor;opacity:.22;animation:locationPulse 2s ease-out infinite}.live-marker-core{position:relative;width:42px;height:42px;border:3px solid white;border-radius:999px;display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:800;box-shadow:0 5px 14px rgba(15,23,42,.25)}
+    @keyframes locationPulse{0%{transform:scale(.65);opacity:.42}70%,100%{transform:scale(1.55);opacity:0}}
+    .map-road{position:absolute;height:14px;border-radius:999px;background:rgba(255,255,255,.78);box-shadow:0 1px 0 rgba(148,163,184,.2)}
+    .planner-mode.active{background:#eef2ff;color:#4f46e5;box-shadow:inset 0 0 0 1px #c7d2fe}
+    .legacy-planner{display:none!important}
+    .planner-aura{box-shadow:0 0 30px rgba(99,14,212,.1)}
+    .planner-dock{transition:all .4s cubic-bezier(.16,1,.3,1)}
+    .itinerary-right-column{display:flex;flex-direction:column;gap:1.25rem}.itinerary-map-column>.card:first-child:not(.itinerary-map-card){display:none}.itinerary-map-card{box-shadow:0 18px 45px -28px rgba(15,23,42,.45)}
+</style>
+</head>
+
+<body>
+<!-- HEADER -->
+<nav class="sticky top-0 z-[100] glass px-5 lg:px-8 h-[76px] flex items-center justify-between gap-5">
+    <div class="flex items-center gap-4 min-w-0">
+        <button onclick="showSection('home')" class="flex items-center gap-2 shrink-0">
+            <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-200">
+                <i class="fa-solid fa-paper-plane text-white"></i>
+            </div>
+            <span class="text-xl font-black tracking-tight">TripPOP</span>
+        </button>
+
+        <div id="tripContext" class="hidden items-center gap-2 pl-4 border-l border-slate-200">
+            <span class="font-bold text-slate-800 text-sm whitespace-nowrap">Kuala Lumpur Trip</span>
+            <span class="bg-indigo-50 text-indigo-600 text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider">Active</span>
+        </div>
+
+        <div class="hidden lg:flex items-center bg-slate-50 rounded-full px-4 py-2.5 w-[310px] border border-slate-100 focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-100">
+            <i class="fa-solid fa-magnifying-glass text-slate-400 text-sm"></i>
+            <input id="globalSearch" onkeydown="globalSearch(event)" type="text" placeholder="Search places, trips..." class="bg-transparent outline-none text-sm ml-3 w-full font-medium">
+        </div>
     </div>
-{% endblock %}
+
+    <div id="mainNav" class="hidden md:flex items-center bg-slate-50 rounded-full p-1 border border-slate-100">
+        <div id="globalNav" class="flex items-center">
+            <button data-target="home" class="nav-btn active px-5 py-2 text-sm font-bold rounded-full">Home</button>
+            <a href="/trips" class="px-5 py-2 text-slate-500 hover:text-slate-900 rounded-full text-sm font-bold transition-colors">My Trips</a>
+            <button data-target="home" data-toast="Explore destinations from the inspiration section." class="nav-btn px-5 py-2 text-slate-500 hover:text-slate-900 rounded-full text-sm font-bold transition-colors">Explore</button>
+        </div>
+        <div id="tripNav" class="hidden items-center">
+            <button data-target="home" class="nav-btn px-5 py-2 text-slate-500 hover:text-slate-900 rounded-full text-sm font-bold transition-colors">Overview</button>
+            <button data-target="map" class="nav-btn px-5 py-2 text-slate-500 hover:text-slate-900 rounded-full text-sm font-bold transition-colors">Map</button>
+            <button data-target="itinerary" class="nav-btn px-5 py-2 text-slate-500 hover:text-slate-900 rounded-full text-sm font-bold transition-colors">Itinerary</button>
+            <button data-target="budget" class="nav-btn px-5 py-2 text-slate-500 hover:text-slate-900 rounded-full text-sm font-bold transition-colors">Finance</button>
+            <button data-target="alerts" class="nav-btn alert-nav px-5 py-2 rounded-full text-sm font-black text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 transition-colors">Alerts <span class="ml-1 bg-rose-600 text-white px-1.5 py-0.5 rounded text-[9px]">1</span></button>
+            <div class="relative"><button onclick="toggleMoreMenu(this)" class="px-5 py-2 text-slate-500 hover:text-slate-900 rounded-full text-sm font-bold transition-colors">More <span class="text-[10px]">▾</span></button><div class="more-menu hidden absolute right-0 top-11 z-50 w-40 rounded-2xl bg-white p-2 shadow-xl border border-slate-200"><button data-target="vote" class="nav-btn w-full text-left px-3 py-2 rounded-lg text-sm font-bold hover:bg-slate-50">Polls</button><button data-target="split" class="nav-btn w-full text-left px-3 py-2 rounded-lg text-sm font-bold hover:bg-slate-50">Split Studio</button></div></div>
+        </div>
+    </div>
+
+    <div class="flex items-center gap-3 shrink-0">
+        <button onclick="openModal('currencyModal')" class="hidden sm:flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-xl shadow-sm">
+            <img src="https://flagcdn.com/w40/my.png" class="w-5 rounded-sm" alt="Malaysia">
+            <span id="currencyLabel" class="text-xs font-bold">MYR</span>
+            <i class="fa-solid fa-chevron-down text-[9px] text-slate-400"></i>
+        </button>
+        <button onclick="showToast('Notifications are all caught up.')" class="relative w-10 h-10 rounded-xl bg-white border border-slate-200">
+            <i class="fa-regular fa-bell text-slate-500"></i><span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-500"></span>
+        </button>
+        <button onclick="openModal('profileModal')" class="relative">
+            <img src="https://www.bntnews.cn/cjpic/frombd/1/253/2630092711/3259174142.jpg" class="w-10 h-10 rounded-full border-2 border-white shadow-md" alt="Profile">
+            <span class="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full"></span>
+        </button>
+    </div>
+</nav>
+
+
+
+<!-- MOBILE NAV -->
+<div class="md:hidden sticky top-[76px] z-50 bg-white border-b border-slate-200 px-3 py-2 overflow-x-auto hide-scroll">
+    <div id="mobileGlobalNav" class="flex gap-1 min-w-max">
+        <button data-target="home" class="nav-btn active px-5 py-2 rounded-full text-sm font-bold">Home</button>
+        <a href="/trips" class="px-5 py-2 rounded-full text-sm font-bold text-slate-500">My Trips</a>
+        <button data-target="home" data-toast="Explore destinations from the inspiration section." class="nav-btn px-5 py-2 rounded-full text-sm font-bold text-slate-500">Explore</button>
+    </div>
+    <div id="mobileTripNav" class="hidden gap-1 min-w-max">
+        <button data-target="home" class="nav-btn px-5 py-2 rounded-full text-sm font-bold text-slate-500">Overview</button>
+        <button data-target="map" class="nav-btn px-5 py-2 rounded-full text-sm font-bold text-slate-500">Map</button>
+        <button data-target="itinerary" class="nav-btn px-5 py-2 rounded-full text-sm font-bold text-slate-500">Itinerary</button>
+        <button data-target="budget" class="nav-btn px-5 py-2 rounded-full text-sm font-bold text-slate-500">Finance</button>
+        <button data-target="alerts" class="nav-btn alert-nav px-5 py-2 rounded-full text-sm font-black text-rose-700 bg-rose-50 border border-rose-200">Alerts <span class="ml-1 bg-rose-600 text-white px-1.5 py-0.5 rounded text-[9px]">1</span></button>
+        <div class="relative"><button onclick="toggleMoreMenu(this)" class="px-5 py-2 rounded-full text-sm font-bold text-slate-500">More <span class="text-[10px]">▾</span></button><div class="more-menu hidden absolute left-0 top-11 z-50 w-40 rounded-2xl bg-white p-2 shadow-xl border border-slate-200"><button data-target="vote" class="nav-btn w-full text-left px-3 py-2 rounded-lg text-sm font-bold">Polls</button><button data-target="split" class="nav-btn w-full text-left px-3 py-2 rounded-lg text-sm font-bold">Split Studio</button></div></div>
+    </div>
+</div>
+
+<main class="max-w-[1440px] mx-auto px-4 lg:px-8 py-7 lg:py-10">
+
+<!-- HOME -->
+<section id="route-home" class="route-section">
+    <div class="relative w-full max-w-[900px] mx-auto mb-10">
+        <div class="absolute -inset-1 bg-gradient-to-r from-purple-100 via-blue-50 to-purple-100 blur-xl opacity-70"></div>
+        <div class="relative glass border border-white/60 rounded-[32px] p-6 planner-aura">
+            <div id="referenceAiView" class="planner-dock">
+                <div class="flex items-center justify-between mb-6 gap-4"><button onclick="switchReferenceView('manual')" class="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900 text-white hover:bg-slate-800 transition-all text-xs font-bold"><i class="fa-solid fa-sliders"></i>Manual flight &amp; hotel plan</button><div class="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100"><span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span></span><span class="text-[10px] font-bold text-emerald-700 uppercase">AI assistant online</span></div></div>
+                <div class="flex flex-col sm:flex-row items-stretch gap-3"><div class="flex-1 flex items-center bg-slate-100/70 rounded-2xl px-5 py-3 border border-transparent focus-within:border-purple-300 focus-within:bg-white focus-within:shadow-lg transition-all"><i class="fa-solid fa-wand-magic-sparkles text-purple-600 mr-3"></i><input id="referenceAiInput" type="text" placeholder="Plan a week in Chiang Mai with a RM 5,000 budget..." class="bg-transparent w-full outline-none text-slate-700 placeholder:text-slate-400 text-sm font-medium"><span class="text-[10px] font-black text-purple-600 pl-3 border-l border-slate-200">AI</span></div><button onclick="triggerReferenceAI()" class="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-sm hover:shadow-lg hover:shadow-purple-200 transition-all"><i class="fa-solid fa-sparkles"></i>Ask TripPOP</button></div>
+            </div>
+            <div id="referenceManualView" class="planner-dock hidden opacity-0 scale-95">
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-5 border-b border-slate-100 pb-4"><button onclick="switchReferenceView('ai')" class="flex items-center gap-2 px-4 py-2 rounded-full bg-purple-50 text-purple-600 border border-purple-100 hover:bg-purple-100 text-xs font-bold"><i class="fa-solid fa-wand-magic-sparkles"></i>Switch to AI suggestions</button><div class="flex bg-slate-100 p-1 rounded-xl"><button onclick="selectReferenceType(this)" class="reference-type px-4 py-1.5 rounded-lg bg-white shadow-sm text-xs font-bold text-slate-800"><i class="fa-solid fa-plane mr-1"></i>Flights</button><button onclick="selectReferenceType(this)" class="reference-type px-4 py-1.5 rounded-lg text-xs font-bold text-slate-500"><i class="fa-solid fa-bed mr-1"></i>Hotels</button><button onclick="selectReferenceType(this)" class="reference-type px-4 py-1.5 rounded-lg text-xs font-bold text-slate-500"><i class="fa-solid fa-car mr-1"></i>Cars</button></div></div>
+                <div class="flex flex-wrap items-center gap-4 mb-4"><label class="flex items-center gap-2 text-xs font-bold"><input type="radio" name="tripType" checked class="accent-indigo-600">Round trip</label><label class="flex items-center gap-2 text-xs font-bold text-slate-500"><input type="radio" name="tripType" class="accent-indigo-600">One way</label><button onclick="openModal('travellerModal')" class="ml-auto flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold"><i class="fa-solid fa-user-group text-slate-400"></i>3 adults, Economy</button></div>
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-2 bg-slate-50 p-2 rounded-2xl border border-slate-100"><label class="md:col-span-3 bg-white rounded-xl p-3 border border-slate-200 focus-within:border-purple-400"><p class="text-[9px] font-black text-slate-400 uppercase">From</p><input value="Kuala Lumpur KUL" class="w-full bg-transparent font-bold text-sm outline-none text-slate-800"></label><label class="md:col-span-3 bg-white rounded-xl p-3 border border-slate-200 focus-within:border-purple-400"><p class="text-[9px] font-black text-slate-400 uppercase">To</p><input id="referenceDestination" placeholder="Where to?" class="w-full bg-transparent font-bold text-sm outline-none text-slate-800"></label><label class="md:col-span-3 bg-white rounded-xl p-3 border border-slate-200 focus-within:border-purple-400"><p class="text-[9px] font-black text-slate-400 uppercase">Dates</p><input value="Sep 30 - Oct 5" class="w-full bg-transparent font-bold text-sm outline-none text-slate-800"></label><label class="md:col-span-3 bg-white rounded-xl p-3 border border-slate-200 focus-within:border-purple-400"><p class="text-[9px] font-black text-slate-400 uppercase">Max budget</p><div class="flex items-center"><span class="text-xs font-bold text-slate-400 mr-1">RM</span><input type="number" value="4500" class="w-full bg-transparent font-bold text-sm outline-none text-slate-800"></div></label></div><div class="mt-5 flex items-center justify-between gap-3"><div class="flex flex-wrap gap-2"><span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Search preferences</span><button onclick="showToast('Direct flights preference added.')" class="px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-[10px] font-bold">Direct flights</button><button onclick="showToast('Free cancellation preference added.')" class="px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-[10px] font-bold">Free cancellation</button></div><button onclick="runReferenceManualSearch()" class="px-8 py-3 rounded-2xl bg-slate-900 text-white font-bold text-sm hover:bg-slate-800 transition-all flex items-center gap-2"><i class="fa-solid fa-magnifying-glass"></i>Search options</button></div>
+            </div>
+        </div>
+    </div>
+    <div class="legacy-planner card rounded-[2rem] p-5 lg:p-7 mb-10">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6"><div class="flex items-center gap-2"><span class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center"><i class="fa-solid fa-wand-magic-sparkles"></i></span><div><p class="text-xs font-black uppercase tracking-widest text-indigo-600">Trip planning assistant</p><p class="text-xs text-slate-400 font-bold">Search flights, hotels and activities in one place.</p></div></div><div class="flex items-center gap-1 rounded-xl bg-slate-50 p-1 border border-slate-100"><button id="aiModeButton" onclick="togglePlannerMode('ai')" class="planner-mode active px-4 py-2 rounded-lg text-xs font-black"><i class="fa-solid fa-sparkles mr-1"></i>Ask AI</button><button id="manualModeButton" onclick="togglePlannerMode('manual')" class="planner-mode px-4 py-2 rounded-lg text-xs font-black text-slate-500"><i class="fa-solid fa-sliders mr-1"></i>Manual search</button></div></div>
+        <div id="aiPlanner" class="rounded-2xl bg-gradient-to-r from-indigo-50 via-white to-violet-50 border border-indigo-100 p-5"><div class="flex flex-col lg:flex-row gap-3"><div class="flex-1 bg-white border border-indigo-100 rounded-xl px-4 py-3 flex items-center gap-3"><i class="fa-solid fa-sparkles text-indigo-500"></i><input id="aiTripPrompt" type="text" value="Plan a 5-night Kuala Lumpur trip for 3 adults" placeholder="Tell AI what you want to plan..." class="bg-transparent outline-none w-full font-bold text-sm"></div><button onclick="askTripAI()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-black text-sm shadow-lg shadow-indigo-100"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Build itinerary</button></div><div class="flex flex-wrap gap-2 mt-4"><span class="text-[10px] font-black uppercase tracking-widest text-slate-400 self-center">Try asking</span><button onclick="useAiPrompt('Find a family-friendly Kuala Lumpur weekend')" class="px-3 py-1.5 rounded-lg bg-white border border-indigo-100 text-xs font-bold">Family weekend</button><button onclick="useAiPrompt('Find cheap flights and hotels to Kuala Lumpur')" class="px-3 py-1.5 rounded-lg bg-white border border-indigo-100 text-xs font-bold">Best value</button><button onclick="useAiPrompt('Plan food and culture highlights in Kuala Lumpur')" class="px-3 py-1.5 rounded-lg bg-white border border-indigo-100 text-xs font-bold">Food &amp; culture</button></div></div>
+        <div id="manualPlanner" class="hidden"><div class="flex items-center gap-2 border-b border-slate-100 pb-4 mb-4 overflow-x-auto hide-scroll"><button onclick="setPlannerType(this,'Flights')" class="planner-type text-indigo-600 font-bold border-b-4 border-indigo-600 pb-2 px-2 whitespace-nowrap"><i class="fa-solid fa-plane mr-2"></i>Flights</button><button onclick="setPlannerType(this,'Stays')" class="planner-type text-slate-400 font-bold pb-2 px-2 whitespace-nowrap"><i class="fa-solid fa-bed mr-2"></i>Hotels</button><button onclick="setPlannerType(this,'Cars')" class="planner-type text-slate-400 font-bold pb-2 px-2 whitespace-nowrap"><i class="fa-solid fa-car mr-2"></i>Cars</button><button onclick="setPlannerType(this,'Attractions')" class="planner-type text-slate-400 font-bold pb-2 px-2 whitespace-nowrap"><i class="fa-solid fa-ticket mr-2"></i>Activities</button></div><div class="grid grid-cols-1 md:grid-cols-12 gap-3"><div class="md:col-span-4 soft-input p-4 rounded-2xl flex items-center gap-3"><i class="fa-solid fa-location-dot text-slate-400"></i><input id="destinationInput" type="text" value="Kuala Lumpur" placeholder="Destination" class="bg-transparent outline-none w-full font-bold"></div><button onclick="openModal('dateModal')" class="md:col-span-4 soft-input p-4 rounded-2xl flex items-center justify-between text-left"><span class="flex items-center gap-3"><i class="fa-regular fa-calendar text-slate-400"></i><span id="dateSummary" class="text-sm font-bold">Sep 30 – Oct 5</span></span><span class="bg-white px-2 py-1 rounded-lg text-[10px] font-black border border-slate-200">5 nights</span></button><button onclick="openModal('travellerModal')" class="md:col-span-3 soft-input p-4 rounded-2xl flex items-center gap-3 text-left"><i class="fa-solid fa-user-group text-slate-400"></i><span id="travellerSummary" class="text-sm font-bold">3 adults</span></button><button onclick="searchTrip()" class="md:col-span-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-100"><i class="fa-solid fa-magnifying-glass"></i></button></div></div>
+        <div class="flex flex-wrap gap-2 mt-4"><span class="text-[10px] font-black uppercase tracking-widest text-slate-400 mr-1 self-center">Quick actions</span><button onclick="showSection('map')" class="px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-bold hover:border-indigo-200">Explore map</button><button onclick="showSection('itinerary')" class="px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-bold hover:border-indigo-200">Build itinerary</button><button onclick="showSection('budget')" class="px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-bold hover:border-indigo-200">Track budget</button></div>
+    </div>
+
+    <div class="flex items-center justify-between mb-6">
+            <div class="order-2 card rounded-3xl p-5"><div class="flex items-center justify-between mb-4"><div><h3 class="text-xl font-black">Trip places</h3><p class="text-xs text-slate-400 font-bold mt-1">Open a location beside your plan.</p></div><span class="text-[10px] font-black text-indigo-600">8 stops</span></div><div class="space-y-2"><button onclick="focusItineraryLocation('KLCC Park, Kuala Lumpur','KLCC · Day 1 highlight')" class="w-full flex items-center gap-3 p-3 rounded-2xl bg-indigo-50 border border-indigo-100 text-left"><span class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center"><i class="fa-solid fa-building"></i></span><span class="flex-1"><strong class="block text-xs font-black">KLCC &amp; Petronas Twin Towers</strong><small class="text-[10px] text-slate-500 font-bold">Day 1 · 2 hours</small></span><i class="fa-solid fa-chevron-right text-xs text-indigo-400"></i></button>
+            <button onclick="openModal('newTripModal')" class="bg-indigo-600 text-white px-5 py-3 rounded-xl font-bold text-sm hover:bg-indigo-700 shadow-lg shadow-indigo-100"><i class="fa-solid fa-plus mr-2"></i>Plan New Trip</button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+        <button onclick="showSection('itinerary')" class="group text-left card rounded-[2rem] overflow-hidden" aria-label="Open Trip to Malaysia">
+            <div class="h-60 relative overflow-hidden">
+                <img src="https://images.unsplash.com/photo-1596422846543-75c6fc197f07?auto=format&fit=crop&q=85&w=1000" class="w-full h-full object-cover group-hover:scale-105 transition duration-700" alt="Kuala Lumpur">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent"></div>
+                <div class="absolute bottom-4 left-5 text-white"><p class="text-xs font-bold opacity-80">TRIP TO MALAYSIA</p><h3 class="text-2xl font-black">Kuala Lumpur</h3></div>
+                <div class="absolute bottom-4 right-5 flex -space-x-2">
+                    <img src="https://tse1.mm.bing.net/th/id/OIP.Ct6-e0h-VTrYORhVxHuaVAHaHT?r=0&rs=1&pid=ImgDetMain&o=7&rm=3" class="w-9 h-9 rounded-full border-2 border-white"><img src="https://tse1.mm.bing.net/th/id/OIP.Qp86Bjn414FfJYzFfnukDgAAAA?r=0&rs=1&pid=ImgDetMain&o=7&rm=3" class="w-9 h-9 rounded-full border-2 border-white"><img src="https://tse4.mm.bing.net/th/id/OIP.l7hnqctSPohnLuTBuC8wQQHaHa?r=0&rs=1&pid=ImgDetMain&o=7&rm=3" class="w-9 h-9 rounded-full border-2 border-white">
+                </div>
+            </div>
+            <div class="p-5 flex items-center justify-between"><div><p class="font-black">Sep 30 – Oct 5</p><p class="text-xs text-slate-400 font-bold mt-1">3 travellers • 8 saved places</p></div><i class="fa-solid fa-arrow-right text-indigo-500"></i></div>
+        </button>
+        <button onclick="showToast('Paris trip opened.')" class="group text-left card rounded-[2rem] overflow-hidden">
+            <div class="h-60 relative overflow-hidden">
+                <img src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=85&w=1000" class="w-full h-full object-cover group-hover:scale-105 transition duration-700" alt="Paris">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent"></div>
+                <div class="absolute bottom-4 left-5 text-white"><p class="text-xs font-bold opacity-80">SAVED TRIP</p><h3 class="text-2xl font-black">Paris</h3></div>
+            </div>
+            <div class="p-5 flex items-center justify-between"><div><p class="font-black">Oct 25 – Nov 1</p><p class="text-xs text-slate-400 font-bold mt-1">Draft itinerary • 12 saved places</p></div><i class="fa-solid fa-arrow-right text-indigo-500"></i></div>
+        </button>
+    </div>
+
+    <div class="flex items-end justify-between mb-5"><div><p class="text-xs font-black uppercase tracking-widest text-slate-400">Inspiration</p><h2 class="text-2xl font-black">Explore Popular Destinations</h2></div><button onclick="showToast('Showing more destinations...')" class="text-indigo-600 font-bold text-sm">View all</button></div>
+    <div class="flex gap-5 overflow-x-auto hide-scroll pb-4">
+        <div class="min-w-[235px] group cursor-pointer" onclick="selectDestination('Hong Kong')"><img src="https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&q=85&w=500" class="w-full h-44 object-cover rounded-3xl mb-3 group-hover:shadow-lg transition" alt="Hong Kong"><p class="font-black text-center">Hong Kong</p><p class="text-[10px] text-slate-400 font-bold text-center uppercase tracking-widest">2,621 stays</p></div>
+        <div class="min-w-[235px] group cursor-pointer" onclick="selectDestination('Tokyo')"><img src="https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&q=85&w=500" class="w-full h-44 object-cover rounded-3xl mb-3 group-hover:shadow-lg transition" alt="Tokyo"><p class="font-black text-center">Tokyo</p><p class="text-[10px] text-slate-400 font-bold text-center uppercase tracking-widest">12,486 stays</p></div>
+        <div class="min-w-[235px] group cursor-pointer" onclick="selectDestination('Taipei')"><img src="https://images.unsplash.com/photo-1470004914212-05527e49370b?auto=format&fit=crop&q=85&w=500" class="w-full h-44 object-cover rounded-3xl mb-3 group-hover:shadow-lg transition" alt="Taipei"><p class="font-black text-center">Taipei</p><p class="text-[10px] text-slate-400 font-bold text-center uppercase tracking-widest">3,566 stays</p></div>
+        <div class="min-w-[235px] group cursor-pointer" onclick="selectDestination('Osaka')"><img src="https://tse1.mm.bing.net/th/id/OIP.fenLplFhQfQ-b7_jVUcLLAHaE7?r=0&rs=1&pid=ImgDetMain&o=7&rm=3" class="w-full h-44 object-cover rounded-3xl mb-3 group-hover:shadow-lg transition" alt="Osaka"><p class="font-black text-center">Osaka</p><p class="text-[10px] text-slate-400 font-bold text-center uppercase tracking-widest">10,018 stays</p></div>
+    </div>
+</section>
+
+<!-- TRIP ALERTS -->
+<section id="route-alerts" class="route-section hidden max-w-4xl mx-auto">
+    <!-- Mini Alert Header -->
+    <div class="bg-rose-50 border border-rose-200 rounded-2xl p-4 flex items-center gap-4 mb-6">
+        <div class="w-10 h-10 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-cloud-showers-heavy text-lg"></i>
+        </div>
+        <div>
+            <p class="text-xs font-black uppercase text-rose-700">Sudden Downpour</p>
+            <p class="text-sm font-bold text-slate-900">Heavy rain expected in George Town for ~60 mins. Outdoor plans affected.</p>
+        </div>
+    </div>
+
+    <!-- The Disruption Fix -->
+    <div class="card rounded-[2rem] overflow-hidden border-2 border-emerald-600">
+        <div class="p-6 bg-slate-50 border-b border-slate-100">
+            <h2 class="text-2xl font-black">Disruption Response</h2>
+            <p class="text-slate-500 text-sm font-bold">We found an indoor alternative to keep your trip on track.</p>
+        </div>
+
+        <div class="p-6 grid md:grid-cols-2 gap-6 items-center">
+            <!-- Out -->
+            <div class="opacity-50">
+                <span class="text-[10px] font-black uppercase text-rose-600">Original Plan (At Risk)</span>
+                <h3 class="text-xl font-black line-through decoration-2">George Town Street Art</h3>
+                <p class="text-xs font-bold text-slate-500">Outdoor Walk • 2:00 PM</p>
+            </div>
+
+            <!-- In -->
+            <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-4">
+                <span class="text-[10px] font-black uppercase text-emerald-700">Recommended Fix</span>
+                <h3 class="text-xl font-black text-emerald-900">Pinang Peranakan Mansion</h3>
+                <p class="text-xs font-bold text-emerald-700 mb-3">Indoor Museum • 350m away</p>
+                <div class="flex flex-wrap gap-2">
+                    <span class="bg-white px-2 py-1 rounded text-[10px] font-black border border-emerald-100">✓ Fully Indoor</span>
+                    <span class="bg-white px-2 py-1 rounded text-[10px] font-black border border-emerald-100">✓ No Extra Cost</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Impact Summary -->
+        <div class="px-6 pb-6 flex flex-wrap gap-6 text-xs font-bold border-t border-slate-100 pt-4">
+            <div class="flex items-center gap-2 text-slate-600">
+                <i class="fa-solid fa-clock text-indigo-500"></i>
+                Saves 18 mins travel
+            </div>
+            <div class="flex items-center gap-2 text-slate-600">
+                <i class="fa-solid fa-utensils text-indigo-500"></i>
+                Preserves 4:30 PM Dinner
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="mt-6 flex items-center justify-between gap-4 bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+        <p id="recoveryStatus" class="text-sm font-bold text-slate-600">Sync this change with the group?</p>
+        <div class="flex gap-2">
+            <button onclick="showSection('itinerary')" class="px-4 py-2 text-xs font-black text-slate-400">Ignore</button>
+            <button onclick="applyRecovery()" class="px-6 py-2 bg-emerald-800 text-white rounded-xl text-xs font-black shadow-lg shadow-emerald-100">
+                Apply Re-route
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- ITINERARY -->
+<section id="route-itinerary" class="route-section hidden">
+    <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-5 mb-7">
+        <div><p class="text-xs font-black uppercase tracking-widest text-indigo-600 mb-2">Collaborative itinerary</p><h2 class="text-3xl lg:text-4xl font-black">Trip to Kuala Lumpur</h2><p class="text-slate-500 font-bold mt-2">Sep 30 – Oct 5 • <span class="text-indigo-600">Ryan, Marcus, Aina</span></p></div>
+        <div class="flex gap-2"><button onclick="openModal('shareModal')" class="bg-white border border-slate-200 px-4 py-3 rounded-xl font-bold"><i class="fa-solid fa-share-nodes mr-2"></i>Share</button><button onclick="openModal('newActivityModal')" class="bg-indigo-600 text-white px-4 py-3 rounded-xl font-bold shadow-lg shadow-indigo-100"><i class="fa-solid fa-plus mr-2"></i>Add activity</button></div>
+    </div>
+
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-7">
+        <div class="card rounded-2xl p-4"><p class="text-[10px] uppercase font-black tracking-widest text-slate-400">Days</p><p class="text-2xl font-black mt-1">6</p></div>
+        <div class="card rounded-2xl p-4"><p class="text-[10px] uppercase font-black tracking-widest text-slate-400">Saved places</p><p id="savedCount" class="text-2xl font-black mt-1">8</p></div>
+        <div class="card rounded-2xl p-4"><p class="text-[10px] uppercase font-black tracking-widest text-slate-400">Activities</p><p id="activityCount" class="text-2xl font-black mt-1">5</p></div>
+        <div class="card rounded-2xl p-4"><p class="text-[10px] uppercase font-black tracking-widest text-slate-400">Budget left</p><p class="text-2xl font-black mt-1 text-emerald-600">RM 1,020</p></div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-7 max-w-6xl">
+        <div class="itinerary-right-column lg:col-span-7">
+            <div class="card rounded-[2rem] p-6 lg:p-7">
+                <div class="flex items-center justify-between mb-5"><div><p class="text-[10px] uppercase tracking-[.18em] text-indigo-600 font-black mb-1">Your schedule</p><h3 class="text-xl font-black">Daily plan</h3></div><button onclick="openModal('newActivityModal')" class="text-indigo-600 font-bold text-sm">+ Activity</button></div>
+                <div class="flex items-center gap-3 border-b border-slate-100 pb-4"><button class="day-tab active-day px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-black" onclick="selectDay(this)" data-day="sep30">Sep 30</button><button class="day-tab px-4 py-2 rounded-xl bg-slate-100 text-slate-500 text-xs font-black" onclick="selectDay(this)" data-day="oct1">Oct 1</button><button class="day-tab px-4 py-2 rounded-xl bg-slate-100 text-slate-500 text-xs font-black" onclick="selectDay(this)" data-day="oct2">Oct 2</button></div>
+                <div id="activityList" class="mt-5 space-y-3">
+                    <div class="flex gap-4 items-start"><span class="text-xs font-black text-slate-400 w-12 pt-1">09:30</span><div class="flex-1 bg-indigo-50 border border-indigo-100 p-4 rounded-2xl"><p class="font-black">Arrive at KLIA &amp; transfer to hotel</p><p class="text-xs text-slate-500 font-bold mt-1">Airport transfer • 60–75 min</p></div></div>
+                    <div class="flex gap-4 items-start"><span class="text-xs font-black text-slate-400 w-12 pt-1">12:00</span><div class="flex-1 bg-white border border-slate-200 p-4 rounded-2xl"><p class="font-black">Hotel check-in &amp; lunch in Bukit Bintang</p><p class="text-xs text-slate-500 font-bold mt-1">Buffer time • 90 min</p></div></div>
+                    <div class="flex gap-4 items-start"><span class="text-xs font-black text-slate-400 w-12 pt-1">15:00</span><div class="flex-1 bg-white border border-slate-200 p-4 rounded-2xl"><p class="font-black">KLCC Park &amp; Petronas Twin Towers</p><p class="text-xs text-slate-500 font-bold mt-1">Walk from Suria KLCC • 2 hours</p></div></div>
+                    <div class="flex gap-4 items-start"><span class="text-xs font-black text-slate-400 w-12 pt-1">19:00</span><div class="flex-1 bg-white border border-slate-200 p-4 rounded-2xl"><p class="font-black">Dinner at Jalan Alor</p><p class="text-xs text-slate-500 font-bold mt-1">Short Grab ride • 90 min</p></div></div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="itinerary-map-column lg:col-span-5">
+            <div class="card rounded-3xl p-5"><div class="flex items-center justify-between mb-4"><div><h3 class="text-xl font-black">Trip places</h3><p class="text-xs text-slate-400 font-bold mt-1">Open a location beside your plan.</p></div><span class="text-[10px] font-black text-indigo-600">5 stops</span></div><div class="space-y-2"><button onclick="focusItineraryLocation('KLCC Park, Kuala Lumpur','KLCC · Day 1 highlight')" class="w-full flex items-center gap-3 p-3 rounded-2xl bg-indigo-50 border border-indigo-100 text-left"><span class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center"><i class="fa-solid fa-building"></i></span><span class="flex-1"><strong class="block text-xs font-black">KLCC &amp; Petronas Twin Towers</strong><small class="text-[10px] text-slate-500 font-bold">Day 1 · 2 hours</small></span><i class="fa-solid fa-chevron-right text-xs text-indigo-400"></i></button><button onclick="focusItineraryLocation('Batu Caves, Kuala Lumpur','Batu Caves · Day 2')" class="w-full flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100 text-left"><span class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center"><i class="fa-solid fa-mountain"></i></span><span class="flex-1"><strong class="block text-xs font-black">Batu Caves</strong><small class="text-[10px] text-slate-500 font-bold">Day 2 · Grab ride</small></span><i class="fa-solid fa-chevron-right text-xs text-slate-300"></i></button><button onclick="focusItineraryLocation('Jalan Alor, Kuala Lumpur','Jalan Alor · Dinner')" class="w-full flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100 text-left"><span class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center"><i class="fa-solid fa-utensils"></i></span><span class="flex-1"><strong class="block text-xs font-black">Jalan Alor</strong><small class="text-[10px] text-slate-500 font-bold">Day 1 · Dinner</small></span><i class="fa-solid fa-chevron-right text-xs text-slate-300"></i></button><button onclick="focusItineraryLocation('Central Market Kuala Lumpur','Central Market · Day 2')" class="w-full flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100 text-left"><span class="w-9 h-9 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center"><i class="fa-solid fa-store"></i></span><span class="flex-1"><strong class="block text-xs font-black">Central Market</strong><small class="text-[10px] text-slate-500 font-bold">Day 2 · 2.5 hours</small></span><i class="fa-solid fa-chevron-right text-xs text-slate-300"></i></button><button onclick="focusItineraryLocation('Bukit Bintang Kuala Lumpur','Bukit Bintang · Day 3')" class="w-full flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100 text-left"><span class="w-9 h-9 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center"><i class="fa-solid fa-bag-shopping"></i></span><span class="flex-1"><strong class="block text-xs font-black">Bukit Bintang</strong><small class="text-[10px] text-slate-500 font-bold">Day 3 · Shopping</small></span><i class="fa-solid fa-chevron-right text-xs text-slate-300"></i></button></div></div>
+            <div class="itinerary-map-card card rounded-[2rem] overflow-hidden sticky top-28"><div class="p-5 lg:p-6 border-b border-slate-100 bg-gradient-to-br from-indigo-50/80 via-white to-emerald-50/60"><div class="flex items-center gap-3"><span class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-100"><i class="fa-solid fa-map-location-dot"></i></span><div><p class="text-[10px] uppercase tracking-[.18em] text-indigo-600 font-black">Trip map</p><h3 class="text-xl font-black">Location preview</h3></div></div><p id="itineraryLocationLabel" class="text-xs text-slate-500 font-bold mt-3">KLCC · Day 1 highlight</p></div><iframe id="itineraryLocationMap" class="w-full h-[520px]" title="Itinerary location map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=KLCC%20Park%2C%20Kuala%20Lumpur&output=embed"></iframe></div>
+        </div>
+
+    </div>
+</section>
+
+<!-- MAP -->
+<section id="route-map" class="route-section hidden max-w-6xl mx-auto">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-7"><div><p class="text-xs font-black uppercase tracking-widest text-indigo-600 mb-2">Trip geography</p><h2 class="text-3xl font-black">Live trip map</h2><p class="text-slate-500 font-bold mt-1">Track shared friend locations and browse every itinerary stop.</p></div><div class="flex flex-wrap gap-2"><button id="demoLocationButton" onclick="toggleDemoLocation(this)" class="bg-emerald-600 text-white px-4 py-3 rounded-xl text-sm font-black"><i class="fa-solid fa-satellite-dish mr-2"></i>Start demo location</button><button onclick="requestMyLocation()" class="bg-indigo-600 text-white px-4 py-3 rounded-xl text-sm font-black"><i class="fa-solid fa-location-crosshairs mr-2"></i>Use my location</button><button onclick="focusMap('Kuala Lumpur')" class="bg-slate-900 text-white px-4 py-3 rounded-xl text-sm font-black"><i class="fa-solid fa-up-right-from-square mr-2"></i>Open Google Maps</button></div></div>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-8 card rounded-[2rem] p-4">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-4"><div class="flex items-center gap-2 text-xs font-black"><span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>Itinerary markers <span id="mapMarkerCount" class="text-slate-400">4 places</span></div><label class="flex items-center gap-2 text-xs font-bold text-slate-500">Within <select id="distanceFilter" onchange="renderTripMap()" class="soft-input rounded-lg px-2 py-1 font-black text-slate-700"><option value="100">100 km</option><option value="5">5 km</option><option value="2">2 km</option></select></label></div>
+            <div id="liveMapCanvas" class="live-map-canvas relative w-full min-h-[520px] rounded-2xl border border-slate-200 overflow-hidden" aria-label="Live friend location map"><span class="map-road w-[78%] left-[8%] top-[22%] rotate-[18deg]"></span><span class="map-road w-[72%] left-[12%] top-[65%] -rotate-[14deg]"></span><span class="map-road w-[84%] left-[5%] top-[48%] rotate-[4deg]"></span><span class="map-road w-[65%] left-[23%] top-[35%] rotate-[72deg]"></span><span class="absolute left-5 bottom-5 rounded-xl bg-white/90 px-3 py-2 text-[10px] font-black text-slate-500 shadow-sm"><i class="fa-solid fa-location-dot text-indigo-600 mr-1"></i>Kuala Lumpur · live demo map</span><div id="liveMapMarkers"></div></div>
+        </div>
+        <div class="lg:col-span-4 card rounded-[2rem] p-6"><div class="flex items-center justify-between mb-4"><div><h3 class="text-xl font-black">Friends nearby</h3><p class="text-[10px] text-slate-400 font-bold mt-1">Only shared locations are visible</p></div><span id="locationSyncStatus" class="text-[10px] font-black text-emerald-600">Live</span></div><div id="friendLocations" class="space-y-3"></div><div class="border-t border-slate-100 mt-5 pt-5"><div class="flex items-center justify-between mb-4"><h3 class="font-black">Nearby stops</h3><span class="text-[10px] uppercase tracking-widest text-slate-400 font-black">From hotel</span></div><div id="mapPlaceList" class="space-y-3"></div></div><div class="mt-5 p-4 rounded-2xl bg-indigo-50 border border-indigo-100"><p class="text-xs font-black text-indigo-900"><i class="fa-solid fa-person-walking mr-2"></i>Walking guide</p><p class="text-[11px] text-indigo-700 font-bold mt-1">Stops under 2 km are suitable for a short walk. Longer distances can be opened in Google Maps for ride estimates.</p></div><p class="text-[10px] text-slate-400 font-bold mt-4"><i class="fa-solid fa-shield-halved mr-1"></i>Each member must grant location permission.</p></div>
+    </div>
+</section>
+
+<!-- DOCUMENTS -->
+<section id="route-documents" class="route-section hidden max-w-6xl mx-auto">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-7"><div><p class="text-xs font-black uppercase tracking-widest text-indigo-600 mb-2">Shared travel vault</p><h2 class="text-3xl font-black">Documents</h2><p class="text-slate-500 font-bold mt-1">Keep tickets, confirmations and travel credentials together.</p></div><div class="flex gap-2"><label class="bg-indigo-600 text-white px-5 py-3 rounded-xl font-bold shadow-lg shadow-indigo-100 cursor-pointer"><i class="fa-solid fa-cloud-arrow-up mr-2"></i>Upload document<input id="documentFile" type="file" class="hidden" onchange="uploadDocument(event)"></label><button onclick="toggleOfflineMode()" id="offlineToggle" class="bg-white border border-slate-200 px-4 py-3 rounded-xl font-bold"><i class="fa-solid fa-wifi mr-2 text-emerald-600"></i>Offline ready</button></div></div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-6"><div class="card rounded-2xl p-5"><p class="text-[10px] uppercase tracking-widest text-slate-400 font-black">Shared files</p><p id="documentCount" class="text-3xl font-black mt-2">4</p><p class="text-xs text-emerald-600 font-bold mt-1">Synced for all members</p></div><div class="card rounded-2xl p-5"><p class="text-[10px] uppercase tracking-widest text-slate-400 font-black">Offline access</p><p id="offlineStatus" class="text-3xl font-black mt-2 text-emerald-600">Ready</p><p class="text-xs text-slate-400 font-bold mt-1">Available without signal</p></div><div class="card rounded-2xl p-5"><p class="text-[10px] uppercase tracking-widest text-slate-400 font-black">Last updated</p><p class="text-3xl font-black mt-2">2 min</p><p class="text-xs text-slate-400 font-bold mt-1">by Aina</p></div></div>
+    <div class="card rounded-[2rem] overflow-hidden"><div class="p-5 border-b border-slate-100 flex items-center justify-between"><div><h3 class="text-xl font-black">Trip files</h3><p class="text-xs text-slate-400 font-bold mt-1">Everyone can view and download these files.</p></div><span class="text-xs font-black text-slate-400">4 members synced</span></div><div id="documentList"><div class="p-5 flex items-center justify-between border-b border-slate-100"><div class="flex items-center gap-4"><div class="w-11 h-11 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center"><i class="fa-solid fa-file-pdf"></i></div><div><p class="font-black">KL flight itinerary.pdf</p><p class="text-xs text-slate-400 font-bold">Ryan • 1.2 MB • Offline ready</p></div></div><button onclick="showToast('Flight itinerary opened.')" class="text-indigo-600 text-xs font-black">Open</button></div><div class="p-5 flex items-center justify-between border-b border-slate-100"><div class="flex items-center gap-4"><div class="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="fa-solid fa-hotel"></i></div><div><p class="font-black">Hotel confirmation</p><p class="text-xs text-slate-400 font-bold">Aina • 840 KB • Offline ready</p></div></div><button onclick="showToast('Hotel confirmation opened.')" class="text-indigo-600 text-xs font-black">Open</button></div><div class="p-5 flex items-center justify-between"><div class="flex items-center gap-4"><div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center"><i class="fa-solid fa-qrcode"></i></div><div><p class="font-black">Travel eSIM QR code</p><p class="text-xs text-slate-400 font-bold">Marcus • 240 KB • Offline ready</p></div></div><button onclick="showToast('eSIM QR code opened.')" class="text-indigo-600 text-xs font-black">Open</button></div></div></div>
+</section>
+
+<!-- CHECKLIST -->
+<section id="route-checklist" class="route-section hidden max-w-5xl mx-auto">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-7"><div><p class="text-xs font-black uppercase tracking-widest text-emerald-600 mb-2">Shared preparation</p><h2 class="text-3xl font-black">Trip checklist</h2><p class="text-slate-500 font-bold mt-1">Assign the practical details before everyone arrives.</p></div><button onclick="openModal('taskModal')" class="bg-indigo-600 text-white px-5 py-3 rounded-xl font-bold shadow-lg shadow-indigo-100"><i class="fa-solid fa-plus mr-2"></i>Add task</button></div>
+    <div class="card rounded-[2rem] p-6 mb-6"><div class="flex items-center justify-between mb-3"><div><p class="text-xs font-black uppercase tracking-widest text-slate-400">Group progress</p><p id="checklistProgressLabel" class="text-2xl font-black mt-1">1 of 4 complete</p></div><span id="checklistProgressPercent" class="text-2xl font-black text-emerald-600">25%</span></div><div class="progress"><span id="checklistProgressBar" style="width:25%;background:#059669"></span></div></div>
+    <div id="checklistItems" class="card rounded-[2rem] overflow-hidden"><div class="p-5 flex items-center gap-4 border-b border-slate-100"><input type="checkbox" checked onchange="toggleTask(this)" class="w-5 h-5 accent-emerald-600"><div class="flex-1"><p class="font-black line-through text-slate-400">Confirm hotel check-in details</p><p class="text-xs text-slate-400 font-bold mt-1">Assigned to Aina • Completed</p></div><span class="text-xs font-black text-emerald-600">Done</span></div><div class="p-5 flex items-center gap-4 border-b border-slate-100"><input type="checkbox" onchange="toggleTask(this)" class="w-5 h-5 accent-emerald-600"><div class="flex-1"><p class="font-black">Buy travel insurance</p><p class="text-xs text-slate-400 font-bold mt-1">Assigned to Ryan • Due Sep 25</p></div><span class="text-xs font-black text-amber-600">Pending</span></div><div class="p-5 flex items-center gap-4 border-b border-slate-100"><input type="checkbox" onchange="toggleTask(this)" class="w-5 h-5 accent-emerald-600"><div class="flex-1"><p class="font-black">Reserve airport transfer</p><p class="text-xs text-slate-400 font-bold mt-1">Assigned to Marcus • Due Sep 27</p></div><span class="text-xs font-black text-amber-600">Pending</span></div><div class="p-5 flex items-center gap-4"><input type="checkbox" onchange="toggleTask(this)" class="w-5 h-5 accent-emerald-600"><div class="flex-1"><p class="font-black">Pack universal plug adaptor</p><p class="text-xs text-slate-400 font-bold mt-1">Assigned to Jason • Due Sep 28</p></div><span class="text-xs font-black text-amber-600">Pending</span></div></div>
+</section>
+
+<!-- BUDGET -->
+<section id="route-budget" class="route-section hidden max-w-6xl mx-auto">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-7"><div><p class="text-xs font-black uppercase tracking-widest text-indigo-600 mb-2">Money management</p><h2 class="text-3xl font-black">Budgeting</h2><p class="text-slate-500 font-bold mt-1">Keep the whole group on the same page.</p></div><div class="flex gap-2"><button onclick="showSection('split')" class="bg-white border border-slate-200 text-slate-700 px-4 py-3 rounded-xl font-bold hover:border-indigo-300"><i class="fa-solid fa-receipt mr-2 text-indigo-500"></i>Split a bill</button><button onclick="openModal('expenseModal')" class="bg-indigo-600 text-white px-5 py-3 rounded-xl font-bold shadow-lg shadow-indigo-100"><i class="fa-solid fa-plus mr-2"></i>Add expense</button></div></div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-7">
+        <div class="lg:col-span-7 card rounded-[2rem] p-7">
+            <div class="flex items-start justify-between"><div><p class="text-xs font-black uppercase tracking-widest text-slate-400">Total trip budget</p><div class="flex items-baseline gap-2 mt-2"><span class="text-xl font-light text-slate-400">MYR</span><span id="budgetTotal" class="text-5xl font-black tracking-tighter">1,500</span></div></div><button onclick="openModal('budgetModal')" class="w-11 h-11 rounded-xl bg-slate-100 hover:bg-slate-200"><i class="fa-solid fa-pen"></i></button></div>
+            <div class="mt-7"><div class="flex justify-between text-xs font-bold mb-2"><span id="budgetSpentLabel">RM 480 spent</span><span id="budgetPercent">32%</span></div><div class="progress"><span id="budgetBar" style="width:32%;background:#4f46e5"></span></div></div>
+            <div class="grid grid-cols-3 gap-3 mt-6"><div class="bg-slate-50 rounded-2xl p-4"><p class="text-[10px] uppercase font-black text-slate-400">Spent</p><p class="font-black mt-1" id="budgetSpent">RM 480</p></div><div class="bg-slate-50 rounded-2xl p-4"><p class="text-[10px] uppercase font-black text-slate-400">Remaining</p><p class="font-black mt-1 text-emerald-600" id="budgetRemaining">RM 1,020</p></div><div class="bg-slate-50 rounded-2xl p-4"><p class="text-[10px] uppercase font-black text-slate-400">Per person</p><p class="font-black mt-1" id="budgetPerPerson">RM 160</p></div></div>
+        </div>
+        <div class="lg:col-span-5 card rounded-[2rem] p-7"><div class="flex justify-between items-center mb-5"><h3 class="font-black">Spending breakdown</h3><button onclick="showToast('Breakdown is already up to date.')" class="text-indigo-600 text-xs font-black">Refresh</button></div>
+            <div class="space-y-4">
+                <div><div class="flex justify-between text-xs font-bold mb-1"><span>Food</span><span>RM 180</span></div><div class="progress"><span style="width:38%;background:#6366f1"></span></div></div>
+                <div><div class="flex justify-between text-xs font-bold mb-1"><span>Attractions</span><span>RM 160</span></div><div class="progress"><span style="width:33%;background:#818cf8"></span></div></div>
+                <div><div class="flex justify-between text-xs font-bold mb-1"><span>Transport</span><span>RM 90</span></div><div class="progress"><span style="width:19%;background:#a5b4fc"></span></div></div>
+                <div><div class="flex justify-between text-xs font-bold mb-1"><span>Other</span><span>RM 50</span></div><div class="progress"><span style="width:10%;background:#c7d2fe"></span></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card rounded-[2rem] p-6 lg:p-7 mb-7">
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-6">
+            <div><p class="text-xs font-black uppercase tracking-widest text-indigo-600 mb-1">Expense analysis</p><h3 class="text-2xl font-black">Where your money goes</h3><p class="text-xs text-slate-400 font-bold mt-1">A quick view of spending across this trip.</p></div>
+            <span class="text-xs font-black text-slate-400"><span id="analysisExpenseCount">3</span> logged expenses</span>
+        </div>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-7">
+            <div class="bg-emerald-50 rounded-2xl p-4"><p class="text-[10px] uppercase font-black text-emerald-700">Total spent</p><p id="analysisTotalSpent" class="text-2xl font-black mt-1 text-emerald-950">RM 480</p><p class="text-[10px] font-bold text-emerald-700 mt-1">of RM 1,500 budget</p></div>
+            <div class="bg-slate-50 rounded-2xl p-4"><p class="text-[10px] uppercase font-black text-slate-400">Average expense</p><p id="analysisAverage" class="text-2xl font-black mt-1">RM 160</p><p class="text-[10px] font-bold text-slate-400 mt-1">per logged expense</p></div>
+            <div class="bg-slate-50 rounded-2xl p-4"><p class="text-[10px] uppercase font-black text-slate-400">Largest category</p><p class="text-2xl font-black mt-1">Food</p><p class="text-[10px] font-bold text-slate-400 mt-1">RM 180 spent</p></div>
+            <div class="bg-indigo-50 rounded-2xl p-4"><p class="text-[10px] uppercase font-black text-indigo-600">Budget remaining</p><p id="analysisRemaining" class="text-2xl font-black mt-1 text-indigo-950">RM 1,020</p><p id="analysisRemainingPercent" class="text-[10px] font-bold text-indigo-600 mt-1">68% available</p></div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-7">
+            <div>
+                <div class="flex items-center justify-between mb-4"><h4 class="font-black">Category distribution</h4><span class="text-[10px] font-bold text-slate-400">RM 480 total</span></div>
+                <div class="space-y-4">
+                    <div><div class="flex justify-between text-xs font-bold mb-1"><span>Food & dining</span><span>RM 180</span></div><div class="progress"><span style="width:38%;background:#166534"></span></div></div>
+                    <div><div class="flex justify-between text-xs font-bold mb-1"><span>Attractions</span><span>RM 160</span></div><div class="progress"><span style="width:33%;background:#4f46e5"></span></div></div>
+                    <div><div class="flex justify-between text-xs font-bold mb-1"><span>Transport</span><span>RM 90</span></div><div class="progress"><span style="width:19%;background:#818cf8"></span></div></div>
+                    <div><div class="flex justify-between text-xs font-bold mb-1"><span>Other</span><span>RM 50</span></div><div class="progress"><span style="width:10%;background:#c7d2fe"></span></div></div>
+                </div>
+            </div>
+            <div>
+                <div class="flex items-center justify-between mb-4"><h4 class="font-black">Daily spend</h4><span class="text-[10px] font-bold text-slate-400">Trip days</span></div>
+                <div class="h-36 flex items-end justify-around gap-4 border-b border-slate-100 px-4">
+                    <div class="flex flex-col items-center gap-2"><span class="text-[10px] font-bold text-slate-400">RM 120</span><div class="w-12 h-16 rounded-t-xl bg-indigo-200"></div><span class="text-[10px] font-black text-slate-500">Day 1</span></div>
+                    <div class="flex flex-col items-center gap-2"><span class="text-[10px] font-bold text-emerald-700">RM 240</span><div class="w-12 h-28 rounded-t-xl bg-emerald-700"></div><span class="text-[10px] font-black text-slate-500">Day 2</span></div>
+                    <div class="flex flex-col items-center gap-2"><span class="text-[10px] font-bold text-slate-400">RM 120</span><div class="w-12 h-16 rounded-t-xl bg-indigo-300"></div><span class="text-[10px] font-black text-slate-500">Day 3</span></div>
+                </div>
+                <p class="text-[10px] text-slate-400 font-bold mt-3">Peak spending day: <span class="text-slate-700">Day 2</span></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card rounded-[2rem] overflow-hidden">
+        <div class="p-5 flex items-center justify-between border-b border-slate-100"><div><h3 class="text-xl font-black">Expenses</h3><p class="text-xs text-slate-400 font-bold mt-1">All shared trip expenses</p></div><button onclick="openModal('settlementModal')" class="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-black">Group balances</button></div>
+        <div id="expenseList">
+            <div class="expense-row p-5 flex items-center justify-between border-b border-slate-100 cursor-pointer"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="fa-solid fa-utensils"></i></div><div><h5 class="font-black">Dinner — Jalan Alor</h5><p class="text-xs text-slate-400 font-bold">Food • Paid by Ryan • Sep 30</p></div></div><p class="font-black">RM 180.00</p></div>
+            <div class="expense-row p-5 flex items-center justify-between border-b border-slate-100 cursor-pointer"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="fa-solid fa-ticket"></i></div><div><h5 class="font-black">Aquaria KLCC</h5><p class="text-xs text-slate-400 font-bold">Attraction • Paid by Ryan • Oct 1</p></div></div><p class="font-black">RM 160.00</p></div>
+            <div class="expense-row p-5 flex items-center justify-between cursor-pointer"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="fa-solid fa-car"></i></div><div><h5 class="font-black">Grab rides</h5><p class="text-xs text-slate-400 font-bold">Transport • Paid by Marcus • Oct 1</p></div></div><p class="font-black">RM 90.00</p></div>
+        </div>
+    </div>
+</section>
+
+<!-- VOTE -->
+<section id="route-vote" class="route-section hidden max-w-5xl mx-auto">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-7">
+        <div><p class="text-xs font-black uppercase tracking-widest text-emerald-600 mb-2">Active group decisions</p><h2 class="text-3xl font-black">Choose what happens next</h2><p class="text-slate-500 font-bold mt-1">Your vote updates the shared trip plan for everyone.</p></div>
+        <span id="voteStatus" class="bg-amber-50 text-amber-700 border border-amber-200 px-3 py-2 rounded-xl text-xs font-black">2 polls open</span>
+    </div>
+    <div class="grid grid-cols-3 gap-3 mb-6"><div class="card rounded-2xl p-4"><p class="text-[10px] uppercase tracking-widest text-slate-400 font-black">Open polls</p><p class="text-2xl font-black mt-1">2</p></div><div class="card rounded-2xl p-4"><p class="text-[10px] uppercase tracking-widest text-slate-400 font-black">Your votes</p><p class="text-2xl font-black mt-1 text-emerald-600">0 / 2</p></div><div class="card rounded-2xl p-4"><p class="text-[10px] uppercase tracking-widest text-slate-400 font-black">Next decision</p><p class="text-sm font-black mt-2">Lunch · 28 min</p></div></div>
+    <div class="card rounded-[2rem] p-5 lg:p-7 mb-6">
+        <div class="flex items-start justify-between gap-4 border-b border-slate-100 pb-5 mb-5">
+            <div><div class="flex items-center gap-2"><span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-1 rounded-md text-[10px] font-black uppercase">Active poll</span><h3 class="text-xl font-black">Day 2 lunch spot</h3></div><p class="text-xs text-slate-400 font-bold mt-2">Nasi Kandar vs Heritage Chinese · George Town Central</p></div>
+            <span class="hidden sm:block text-xs font-black text-rose-500 bg-rose-50 border border-rose-100 px-3 py-2 rounded-xl"><i class="fa-regular fa-clock mr-1"></i>Closes in 28 min</span>
+        </div>
+        <div id="lunchVoteOptions" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        <div class="flex items-center justify-between border-t border-slate-100 pt-5 mt-5"><p id="lunchVoteSummary" class="text-xs text-slate-500 font-bold"></p><button onclick="showToast('Alternative venue suggestions are coming soon.')" class="text-xs font-black text-indigo-600">+ Propose alternative venue</button></div>
+    </div>
+    <div class="card rounded-[2rem] p-5 lg:p-7">
+        <div class="flex items-start justify-between gap-4 border-b border-slate-100 pb-5 mb-5"><div><div class="flex items-center gap-2"><span class="bg-amber-50 text-amber-700 border border-amber-200 px-2 py-1 rounded-md text-[10px] font-black uppercase">Open poll</span><h3 class="text-xl font-black">Night activity</h3></div><p class="text-xs text-slate-400 font-bold mt-2">Day 2 evening slot (8:30 PM) · Social & Leisure</p></div><span class="text-xs font-black text-amber-700 bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl">Awaiting your vote</span></div>
+        <div id="nightVoteOptions" class="space-y-3"></div>
+        <div class="flex items-center justify-between border-t border-slate-100 pt-5 mt-5"><p class="text-xs text-slate-500 font-bold">Tap an option to cast your tie-breaking vote</p><p class="text-xs font-black">Closes tonight at 10:00 PM</p></div>
+    </div>
+</section>
+
+<!-- SPLIT STUDIO -->
+<section id="route-split" class="route-section hidden">
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-5 mb-7">
+        <div><p class="text-xs font-black uppercase tracking-widest text-indigo-600 mb-2">Smart expense splitting</p><h2 class="text-3xl font-black">Split Studio</h2><p class="text-slate-500 font-bold mt-1">Scan, itemize and settle group bills.</p></div>
+        <div class="flex gap-2"><button onclick="document.getElementById('receiptFile').click()" class="bg-white border border-slate-200 px-5 py-3 rounded-xl font-bold"><i class="fa-solid fa-cloud-arrow-up mr-2 text-indigo-500"></i>Upload receipt</button><input id="receiptFile" type="file" accept="image/*" class="hidden" onchange="previewReceipt(event)"><button onclick="openModal('scanModal')" class="bg-indigo-600 text-white px-5 py-3 rounded-xl font-bold shadow-lg shadow-indigo-100"><i class="fa-solid fa-camera mr-2"></i>Scan another bill</button></div>
+    </div>
+
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6"><div class="card rounded-2xl p-4"><p class="text-[10px] uppercase tracking-widest text-slate-400 font-black">Receipt total</p><p class="text-2xl font-black mt-1">RM 25.50</p><p class="text-[10px] text-slate-400 font-bold mt-1">5 items detected</p></div><div class="card rounded-2xl p-4"><p class="text-[10px] uppercase tracking-widest text-slate-400 font-black">Assigned</p><p class="text-2xl font-black mt-1 text-indigo-600">RM 25.50</p><p class="text-[10px] text-emerald-600 font-bold mt-1">100% balanced</p></div><div class="card rounded-2xl p-4"><p class="text-[10px] uppercase tracking-widest text-slate-400 font-black">Your share</p><p class="text-2xl font-black mt-1">RM 10.00</p><p class="text-[10px] text-slate-400 font-bold mt-1">2 items assigned</p></div><div class="card rounded-2xl p-4 bg-indigo-600 text-white"><p class="text-[10px] uppercase tracking-widest text-indigo-200 font-black">Settlement</p><p class="text-2xl font-black mt-1">RM 14.50</p><p class="text-[10px] text-indigo-100 font-bold mt-1">Marcus owes you</p></div></div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-5 card rounded-[2rem] p-6">
+            <div class="flex items-center justify-between mb-5"><span class="text-xs font-black text-slate-400 uppercase tracking-widest">Receipt scan</span><span class="bg-emerald-50 text-emerald-600 text-[10px] font-black px-2 py-1 rounded-md"><i class="fa-solid fa-circle-check mr-1"></i>High confidence OCR</span></div>
+            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 min-h-[430px] flex items-center justify-center relative overflow-hidden">
+                <img id="receiptPreview" src="https://media-cdn.tripadvisor.com/media/photo-s/0a/c3/48/ca/receipt.jpg" class="w-full max-h-[430px] object-contain rounded-xl" alt="Receipt">
+            </div>
+            <div class="grid grid-cols-2 gap-3 mt-5"><button onclick="showToast('Retake mode enabled.')" class="border border-slate-200 py-3 rounded-xl text-xs font-bold">Retake scan</button><button onclick="showToast('Bounding box editor opened.')" class="border border-slate-200 py-3 rounded-xl text-xs font-bold">Adjust boxes</button></div>
+        </div>
+
+        <div class="lg:col-span-7 space-y-6">
+            <div class="card rounded-[2rem] p-6">
+                <div class="flex items-center justify-between mb-5"><h3 class="font-black">Group roster</h3><span class="text-[10px] font-black text-slate-400">3 of 3 synced</span></div>
+                <div class="grid grid-cols-3 gap-3">
+                    <button onclick="selectPayer('Ryan',this)" class="payer-card bg-indigo-50 border-2 border-indigo-500 p-4 rounded-2xl"><div class="w-10 h-10 bg-slate-900 text-white rounded-full flex items-center justify-center text-xs font-black mx-auto mb-2">RY</div><p class="text-xs font-black">You (Ryan)</p><p class="text-[10px] text-indigo-600 font-bold mt-1">RM 10.00</p></button>
+                    <button onclick="selectPayer('Marcus',this)" class="payer-card bg-slate-50 border border-slate-200 p-4 rounded-2xl"><div class="w-10 h-10 bg-slate-200 text-slate-600 rounded-full flex items-center justify-center text-xs font-black mx-auto mb-2">MT</div><p class="text-xs font-black">Marcus</p><p class="text-[10px] text-slate-400 font-bold mt-1">RM 10.75</p></button>
+                    <button onclick="selectPayer('Aina',this)" class="payer-card bg-slate-50 border border-slate-200 p-4 rounded-2xl"><div class="w-10 h-10 bg-slate-200 text-slate-600 rounded-full flex items-center justify-center text-xs font-black mx-auto mb-2">AY</div><p class="text-xs font-black">Aina</p><p class="text-[10px] text-slate-400 font-bold mt-1">RM 4.75</p></button>
+                </div>
+            </div>
+
+            <div class="card rounded-[2rem] p-6">
+                <div class="flex items-center justify-between mb-5"><h3 class="font-black">Itemization</h3><button onclick="addSplitItem()" class="text-indigo-600 text-sm font-black">+ Add item</button></div>
+                <div id="splitItems" class="space-y-3 overflow-y-auto max-h-[400px] pr-2">
+    <!-- Item 1 -->
+    <div class="split-item bg-slate-50 p-4 rounded-2xl border border-indigo-100">
+        <div class="flex items-start justify-between gap-4">
+            <div>
+                <p class="font-black text-sm">Limau Kasturi (x2)</p>
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Beverage</p>
+            </div>
+            <p class="font-black">RM 4.00</p>
+        </div>
+        <div class="flex gap-2 mt-4">
+            <button class="split-mode px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-[10px] font-black" onclick="setSplitMode(this)">Solo</button>
+            <button class="split-mode px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-[10px] font-black" onclick="setSplitMode(this)">Equal</button>
+            <button class="px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-[10px] font-black" onclick="showToast('Select who shared this item.')">Assign people</button>
+        </div>
+    </div>
+
+    <!-- Item 2 -->
+    <div class="split-item bg-slate-50 p-4 rounded-2xl border border-slate-100">
+        <div class="flex items-start justify-between gap-4">
+            <div>
+                <p class="font-black text-sm">Nasi Goreng C Api (x1)</p>
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Main Course</p>
+            </div>
+            <p class="font-black">RM 4.50</p>
+        </div>
+        <div class="flex gap-2 mt-4">
+            <button class="split-mode px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-[10px] font-black" onclick="setSplitMode(this)">Solo</button>
+            <button class="split-mode px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-[10px] font-black" onclick="setSplitMode(this)">Equal</button>
+            <button class="px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-[10px] font-black" onclick="showToast('Select who shared this item.')">Assign people</button>
+        </div>
+    </div>
+
+    <!-- Item 3 -->
+    <div class="split-item bg-slate-50 p-4 rounded-2xl border border-slate-100">
+        <div class="flex items-start justify-between gap-4">
+            <div>
+                <p class="font-black text-sm">Sate Perut (x10)</p>
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Street Food</p>
+            </div>
+            <p class="font-black">RM 8.00</p>
+        </div>
+        <div class="flex gap-2 mt-4">
+            <button class="split-mode px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-[10px] font-black" onclick="setSplitMode(this)">Solo</button>
+            <button class="split-mode px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-[10px] font-black" onclick="setSplitMode(this)">Equal</button>
+            <button class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-[10px] font-black" onclick="showToast('Select who shared this item.')">Assign people</button>
+        </div>
+    </div>
+
+    <!-- Item 4 -->
+    <div class="split-item bg-slate-50 p-4 rounded-2xl border border-slate-100">
+        <div class="flex items-start justify-between gap-4">
+            <div>
+                <p class="font-black text-sm">Sate Daging (x5)</p>
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Street Food</p>
+            </div>
+            <p class="font-black">RM 4.00</p>
+        </div>
+        <div class="flex gap-2 mt-4">
+            <button class="split-mode px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-[10px] font-black" onclick="setSplitMode(this)">Solo</button>
+            <button class="split-mode px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-[10px] font-black" onclick="setSplitMode(this)">Equal</button>
+            <button class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-[10px] font-black" onclick="showToast('Select who shared this item.')">Assign people</button>
+        </div>
+    </div>
+
+    <!-- Item 5 -->
+    <div class="split-item bg-slate-50 p-4 rounded-2xl border border-slate-100">
+        <div class="flex items-start justify-between gap-4">
+            <div>
+                <p class="font-black text-sm">Sate Ayam (x30)</p>
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Street Food</p>
+            </div>
+            <p class="font-black">RM 24.00</p>
+        </div>
+        <div class="flex gap-2 mt-4">
+            <button class="split-mode px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-[10px] font-black" onclick="setSplitMode(this)">Solo</button>
+            <button class="split-mode px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-[10px] font-black" onclick="setSplitMode(this)">Equal</button>
+            <button class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-[10px] font-black" onclick="showToast('Select who shared this item.')">Assign people</button>
+        </div>
+    </div>
+</div>
+            </div>
+
+            <div class="bg-indigo-600 rounded-[2rem] p-7 text-white shadow-xl relative overflow-hidden"><div class="absolute -right-16 -top-16 w-48 h-48 rounded-full bg-white/10"></div><p class="text-[10px] font-black uppercase tracking-widest text-indigo-200">Settlement summary</p><div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5 mt-5"><div><p class="text-sm font-bold opacity-80">Marcus owes you</p><p class="text-4xl font-black tracking-tighter">RM 14.50</p></div><button onclick="commitSplitExpense()" class="bg-white text-indigo-600 px-5 py-3 rounded-xl font-black text-sm shadow-xl">Add to budget &amp; settle</button></div><div class="pt-5 mt-5 border-t border-white/10 flex justify-between text-[10px] font-black uppercase tracking-widest"><span class="opacity-60">Receipt total syncs to trip budget</span><span><i class="fa-solid fa-shield-halved mr-1"></i> Secure</span></div></div>
+        </div>
+    </div>
+</section>
+</main>
+
+
+<!-- TOAST -->
+<div id="toast" class="fixed bottom-6 right-6 z-[200] hidden"><div class="toast bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3"><i class="fa-solid fa-circle-check text-emerald-400"></i><span id="toastText" class="text-sm font-bold"></span></div></div>
+
+<!-- MODALS -->
+<div id="modalLayer" class="hidden fixed inset-0 z-[150] modal-backdrop items-center justify-center p-4">
+    <div id="modalBox" class="modal bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden"></div>
+</div>
+
+<script>
+let budget = 1500;
+let spent = 480;
+let places = ['Suria KLCC','Petronas Twin Towers','Aquaria KLCC','Central Market','Bukit Bintang'];
+let activityCount = 5;
+
+function showSection(target){
+    document.querySelectorAll('.more-menu').forEach(menu=>menu.classList.add('hidden'));
+    document.querySelectorAll('.route-section').forEach(s=>s.classList.add('hidden'));
+    const section=document.getElementById('route-'+target);
+    if(section){section.classList.remove('hidden'); window.scrollTo({top:0,behavior:'smooth'});}
+    const inTrip=target!=='home';
+    document.getElementById('globalNav').classList.toggle('hidden',inTrip);
+    document.getElementById('tripNav').classList.toggle('hidden',!inTrip);
+    document.getElementById('tripNav').classList.toggle('flex',inTrip);
+    document.getElementById('tripContext').classList.toggle('hidden',!inTrip);
+    document.getElementById('tripContext').classList.toggle('flex',inTrip);
+    document.getElementById('mobileGlobalNav').classList.toggle('hidden',inTrip);
+    document.getElementById('mobileTripNav').classList.toggle('hidden',!inTrip);
+    document.getElementById('mobileTripNav').classList.toggle('flex',inTrip);
+    document.querySelectorAll('.nav-btn').forEach(b=>{
+        const active=b.dataset.target===target&&!b.dataset.toast;
+        b.classList.toggle('active',active);
+        b.classList.toggle('text-slate-500',!active);
+    });
+    if(target==='map'){renderTripMap();loadLocations();if(!window.locationPolling)window.locationPolling=setInterval(loadLocations,5000)}
+    if(target==='checklist') updateChecklistProgress();
+    if(target==='vote') loadVotes();
+}
+function toggleMoreMenu(button){const menu=button.parentElement.querySelector('.more-menu');document.querySelectorAll('.more-menu').forEach(item=>{if(item!==menu)item.classList.add('hidden')});menu.classList.toggle('hidden')}
+document.querySelectorAll('.nav-btn').forEach(btn=>btn.addEventListener('click',()=>{showSection(btn.dataset.target);if(btn.dataset.toast)showToast(btn.dataset.toast)}));
+
+function showToast(msg){
+    const t=document.getElementById('toast'); document.getElementById('toastText').textContent=msg;
+    t.classList.remove('hidden'); clearTimeout(window.toastTimer); window.toastTimer=setTimeout(()=>t.classList.add('hidden'),2600);
+}
+function openModal(type){
+    const layer=document.getElementById('modalLayer'), box=document.getElementById('modalBox');
+    const templates={
+        currencyModal:`<div class="p-6"><div class="flex justify-between items-center mb-5"><h3 class="text-xl font-black">Currency</h3><button onclick="closeModal()" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button></div><div class="space-y-2"><button onclick="setCurrency('MYR')" class="w-full text-left p-4 rounded-xl bg-indigo-50 border border-indigo-100 font-black">🇲🇾 MYR — Malaysian Ringgit</button><button onclick="setCurrency('USD')" class="w-full text-left p-4 rounded-xl border border-slate-200 font-black">🇺🇸 USD — US Dollar</button><button onclick="setCurrency('SGD')" class="w-full text-left p-4 rounded-xl border border-slate-200 font-black">🇸🇬 SGD — Singapore Dollar</button></div></div>`,
+        dateModal:`<div class="p-6"><div class="flex justify-between items-center mb-5"><h3 class="text-xl font-black">Trip dates</h3><button onclick="closeModal()" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button></div><label class="text-xs font-black text-slate-500">Start date</label><input id="startDate" type="date" value="2026-09-30" class="soft-input w-full rounded-xl p-3 mt-2 mb-4"><label class="text-xs font-black text-slate-500">End date</label><input id="endDate" type="date" value="2026-10-05" class="soft-input w-full rounded-xl p-3 mt-2"><button onclick="saveDates()" class="w-full mt-5 bg-indigo-600 text-white py-3 rounded-xl font-black">Save dates</button></div>`,
+        travellerModal:`<div class="p-6"><div class="flex justify-between items-center mb-5"><h3 class="text-xl font-black">Travellers</h3><button onclick="closeModal()" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button></div><label class="text-xs font-black text-slate-500">Adults</label><div class="flex items-center gap-4 mt-3"><button onclick="changeTravellers(-1)" class="w-11 h-11 rounded-xl bg-slate-100 font-black">−</button><span id="adultCount" class="text-xl font-black">3</span><button onclick="changeTravellers(1)" class="w-11 h-11 rounded-xl bg-slate-100 font-black">+</button></div><button onclick="closeModal();showToast('Traveller count updated.')" class="w-full mt-6 bg-indigo-600 text-white py-3 rounded-xl font-black">Done</button></div>`,
+        newTripModal:`<div class="p-6"><div class="flex justify-between items-center mb-5"><h3 class="text-xl font-black">Plan a new trip</h3><button onclick="closeModal()" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button></div><input id="newTripName" placeholder="Trip name, e.g. Tokyo Adventure" class="soft-input w-full rounded-xl p-3 font-bold"><input id="newTripDestination" placeholder="Destination" class="soft-input w-full rounded-xl p-3 font-bold mt-3"><button onclick="createTrip()" class="w-full mt-5 bg-indigo-600 text-white py-3 rounded-xl font-black">Create trip</button></div>`,
+        newActivityModal:`<div class="p-6"><div class="flex justify-between items-center mb-5"><h3 class="text-xl font-black">Add activity</h3><button onclick="closeModal()" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button></div><input id="activityName" placeholder="Activity name" class="soft-input w-full rounded-xl p-3 font-bold"><div class="grid grid-cols-2 gap-3 mt-3"><input id="activityTime" type="time" value="10:00" class="soft-input rounded-xl p-3 font-bold"><input id="activityDuration" placeholder="2 hours" class="soft-input rounded-xl p-3 font-bold"></div><button onclick="createActivity()" class="w-full mt-5 bg-indigo-600 text-white py-3 rounded-xl font-black">Add to plan</button></div>`,
+        placeModal:`<div class="p-6"><div class="flex justify-between items-center mb-5"><h3 class="text-xl font-black">Add place</h3><button onclick="closeModal()" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button></div><input id="modalPlace" placeholder="e.g. Pavilion KL" class="soft-input w-full rounded-xl p-3 font-bold"><button onclick="addModalPlace()" class="w-full mt-5 bg-indigo-600 text-white py-3 rounded-xl font-black">Add place</button></div>`,
+        budgetModal:`<div class="p-6"><div class="flex justify-between items-center mb-5"><h3 class="text-xl font-black">Set trip budget</h3><button onclick="closeModal()" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button></div><input id="budgetInput" type="number" value="${budget}" class="soft-input w-full rounded-xl p-3 font-black"><button onclick="saveBudget()" class="w-full mt-5 bg-indigo-600 text-white py-3 rounded-xl font-black">Save budget</button></div>`,
+        expenseModal:`<div class="p-6"><div class="flex justify-between items-center mb-5"><h3 class="text-xl font-black">Add expense</h3><button onclick="closeModal()" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button></div><input id="expenseName" placeholder="Expense name" class="soft-input w-full rounded-xl p-3 font-bold"><input id="expenseAmount" type="number" step="0.01" placeholder="Amount (RM)" class="soft-input w-full rounded-xl p-3 font-bold mt-3"><button onclick="saveExpense()" class="w-full mt-5 bg-indigo-600 text-white py-3 rounded-xl font-black">Add expense</button></div>`,
+        settlementModal:`<div class="p-6"><div class="flex justify-between items-center mb-5"><h3 class="text-xl font-black">Group balances</h3><button onclick="closeModal()" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button></div><div class="space-y-3"><div class="p-4 rounded-2xl bg-emerald-50 flex justify-between"><span class="font-bold">Marcus owes Ryan</span><b>RM 14.50</b></div><div class="p-4 rounded-2xl bg-slate-50 flex justify-between"><span class="font-bold">Aina owes Ryan</span><b>RM 4.75</b></div></div><button onclick="closeModal();openModal('qrModal')" class="w-full mt-5 bg-indigo-600 text-white py-3 rounded-xl font-black">Settle balances</button></div>`,
+        qrModal:`<div class="p-6 text-center"><div class="flex justify-between items-center mb-4"><h3 class="text-xl font-black">DuitNow settlement</h3><button onclick="closeModal()" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button></div><div class="w-48 h-48 mx-auto bg-slate-100 rounded-2xl flex items-center justify-center border-8 border-white shadow-lg"><div class="text-center"><i class="fa-solid fa-qrcode text-7xl text-slate-900"></i><p class="text-[9px] font-black mt-2">DEMO QR</p></div></div><p class="font-black mt-5">RM 14.50</p><p class="text-xs text-slate-400 font-bold mt-1">Ryan • DuitNow</p><button onclick="closeModal();showToast('Settlement marked as pending.')" class="w-full mt-5 bg-indigo-600 text-white py-3 rounded-xl font-black">Mark as paid</button></div>`,
+        shareModal:`<div class="p-6"><div class="flex justify-between items-center mb-5"><h3 class="text-xl font-black">Share trip</h3><button onclick="closeModal()" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button></div><div class="soft-input p-3 rounded-xl text-sm font-bold truncate">trippop.app/trip/kuala-lumpur</div><button onclick="navigator.clipboard?.writeText('trippop.app/trip/kuala-lumpur');closeModal();showToast('Trip link copied!')" class="w-full mt-4 bg-indigo-600 text-white py-3 rounded-xl font-black">Copy link</button></div>`,
+        profileModal:`<div class="p-6"><div class="flex justify-between items-center mb-5"><h3 class="text-xl font-black">Profile</h3><button onclick="closeModal()" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button></div><div class="flex items-center gap-4"><img src="https://i.pravatar.cc/100?img=12" class="w-16 h-16 rounded-full"><div><p class="font-black">Ryan</p><p class="text-xs text-slate-400 font-bold">Trip organiser</p></div></div><button onclick="closeModal();showToast('Profile settings opened.')" class="w-full mt-6 bg-slate-900 text-white py-3 rounded-xl font-black">Account settings</button></div>`,
+        scanModal:`<div class="p-6 text-center"><div class="flex justify-between items-center mb-5"><h3 class="text-xl font-black">Scan receipt</h3><button onclick="closeModal()" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button></div><div class="border-2 border-dashed border-indigo-200 rounded-2xl p-10 bg-indigo-50/50"><i class="fa-solid fa-receipt text-4xl text-indigo-500"></i><p class="font-black mt-3">Choose a receipt image</p><p class="text-xs text-slate-400 font-bold mt-1">OCR will detect items and amounts.</p><button onclick="closeModal();document.getElementById('receiptFile').click()" class="mt-5 bg-indigo-600 text-white px-5 py-3 rounded-xl font-black">Choose image</button></div></div>`
+    };
+    templates.taskModal=`<div class="p-6"><div class="flex justify-between items-center mb-5"><h3 class="text-xl font-black">Add checklist task</h3><button onclick="closeModal()" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button></div><input id="taskName" placeholder="e.g. Confirm airport transfer" class="soft-input w-full rounded-xl p-3 font-bold"><select id="taskAssignee" class="soft-input w-full rounded-xl p-3 font-bold mt-3"><option>Ryan</option><option>Marcus</option><option>Aina</option><option>Jason</option></select><button onclick="saveTask()" class="w-full mt-5 bg-indigo-600 text-white py-3 rounded-xl font-black">Assign task</button></div>`;
+    box.innerHTML=templates[type] || '<div class="p-6">No content.</div>';
+    layer.classList.remove('hidden'); layer.classList.add('flex');
+}
+function closeModal(){const l=document.getElementById('modalLayer');l.classList.add('hidden');l.classList.remove('flex')}
+document.getElementById('modalLayer').addEventListener('click',e=>{if(e.target.id==='modalLayer')closeModal()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+function setPlannerType(btn,type){document.querySelectorAll('.planner-type').forEach(b=>{b.classList.remove('text-indigo-600','border-indigo-600','border-b-4');b.classList.add('text-slate-400')});btn.classList.add('text-indigo-600','border-indigo-600','border-b-4');btn.classList.remove('text-slate-400');showToast(type+' search selected.')}
+function switchReferenceView(mode){const ai=document.getElementById('referenceAiView'),manual=document.getElementById('referenceManualView');if(mode==='manual'){ai.classList.add('opacity-0','scale-95');setTimeout(()=>{ai.classList.add('hidden');manual.classList.remove('hidden');setTimeout(()=>manual.classList.remove('opacity-0','scale-95'),40)},220)}else{manual.classList.add('opacity-0','scale-95');setTimeout(()=>{manual.classList.add('hidden');ai.classList.remove('hidden');setTimeout(()=>ai.classList.remove('opacity-0','scale-95'),40)},220)}}
+function triggerReferenceAI(){const prompt=document.getElementById('referenceAiInput').value.trim();if(!prompt){showToast('Tell TripPOP what you want to plan.');return}const destination=prompt.toLowerCase().includes('chiang mai')?'Chiang Mai':prompt.toLowerCase().includes('kuala lumpur')?'Kuala Lumpur':'Kuala Lumpur';document.getElementById('destinationInput').value=destination;showSection('itinerary');showToast('TripPOP is building your itinerary...')}
+function selectReferenceType(button){document.querySelectorAll('.reference-type').forEach(item=>item.classList.remove('bg-white','shadow-sm','text-slate-800'));document.querySelectorAll('.reference-type').forEach(item=>item.classList.add('text-slate-500'));button.classList.add('bg-white','shadow-sm','text-slate-800');button.classList.remove('text-slate-500');showToast(button.textContent+' search selected.')}
+function runReferenceManualSearch(){const destination=document.getElementById('referenceDestination').value.trim()||'Kuala Lumpur';document.getElementById('destinationInput').value=destination;showSection('itinerary');focusMap(destination);showToast('Searching the best options for '+destination+'.')}
+function togglePlannerMode(mode){const ai=document.getElementById('aiPlanner'),manual=document.getElementById('manualPlanner'),aiButton=document.getElementById('aiModeButton'),manualButton=document.getElementById('manualModeButton');const aiActive=mode==='ai';ai.classList.toggle('hidden',!aiActive);manual.classList.toggle('hidden',aiActive);aiButton.classList.toggle('active',aiActive);manualButton.classList.toggle('active',!aiActive);aiButton.classList.toggle('text-slate-500',!aiActive);manualButton.classList.toggle('text-slate-500',aiActive)}
+function useAiPrompt(prompt){document.getElementById('aiTripPrompt').value=prompt}
+function askTripAI(){const prompt=document.getElementById('aiTripPrompt').value.trim()||'Plan a Kuala Lumpur trip';const destination=prompt.toLowerCase().includes('kuala lumpur')?'Kuala Lumpur':prompt.split(' to ').pop()||'Kuala Lumpur';document.getElementById('destinationInput').value=destination;showSection('itinerary');showToast('AI itinerary ready: '+prompt)}
+function searchTrip(){const d=document.getElementById('destinationInput').value.trim()||'Kuala Lumpur';showSection('itinerary');focusMap(d);showToast('Trip search updated for '+d+'.')}
+function selectDestination(name){document.getElementById('destinationInput').value=name;showToast(name+' selected.');}
+function globalSearch(e){if(e.key==='Enter'){const q=e.target.value.trim();if(q){document.getElementById('destinationInput').value=q;showSection('itinerary');focusMap(q);}}}
+function focusMap(query){const q=(query||'Kuala Lumpur').trim(),url='https://www.google.com/maps?q='+encodeURIComponent(q)+'&output=embed',search=document.getElementById('mapSearch'),googleMap=document.getElementById('googleMap');if(search)search.value=q;if(googleMap)googleMap.src=url;showToast('Map focus updated to '+q+'.')}
+function updateLiveMap(latitude,longitude){window.latestLiveCoordinate={latitude,longitude};}
+function focusItineraryLocation(query,label){const map=document.getElementById('itineraryLocationMap');if(map)map.src='https://www.google.com/maps?q='+encodeURIComponent(query)+'&output=embed';const locationLabel=document.getElementById('itineraryLocationLabel');if(locationLabel)locationLabel.textContent=label}
+async function loadLocations(){const list=document.getElementById('friendLocations');if(!list)return;try{const response=await fetch('/api/locations');if(!response.ok)throw new Error('Location request failed');const data=await response.json();renderLocations(data.locations);document.getElementById('locationSyncStatus').textContent='Live'}catch(error){document.getElementById('locationSyncStatus').textContent='Offline'}}
+function renderLocations(locations){const list=document.getElementById('friendLocations');if(!list)return;const colors={Ryan:'bg-indigo-600',Marcus:'bg-emerald-600',Aina:'bg-amber-500'};list.innerHTML=locations.map(location=>`<div class="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100"><span class="w-9 h-9 rounded-full ${colors[location.member]||'bg-slate-700'} text-white flex items-center justify-center text-[10px] font-black">${escapeHtml(location.member.slice(0,2).toUpperCase())}</span><div class="flex-1"><p class="text-xs font-black">${escapeHtml(location.member)}${location.member==='Ryan'?' (You)':''}</p><p class="text-[10px] text-slate-400 font-bold">${escapeHtml(location.status||'Location shared')}</p></div><span class="w-2 h-2 rounded-full ${location.status==='sharing'?'bg-emerald-500':'bg-amber-400'}"></span></div>`).join('');renderLiveMarkers(locations)}
+function renderLiveMarkers(locations){const markerLayer=document.getElementById('liveMapMarkers');if(!markerLayer)return;const colors={Ryan:'bg-indigo-600',Marcus:'bg-emerald-600',Aina:'bg-amber-500'};const latMin=3.145,latMax=3.165,lngMin=101.705,lngMax=101.72;markerLayer.innerHTML=locations.map(location=>{const left=Math.max(7,Math.min(93,(location.longitude-lngMin)/(lngMax-lngMin)*100)),top=Math.max(8,Math.min(88,(latMax-location.latitude)/(latMax-latMin)*100));return `<button class="live-marker text-indigo-600" style="left:${left}%;top:${top}%" title="${escapeHtml(location.member)}"><span class="live-marker-core ${colors[location.member]||'bg-slate-700'}">${escapeHtml(location.member.slice(0,2).toUpperCase())}</span><span class="block mt-2 rounded-md bg-white/90 px-2 py-1 text-[10px] font-black text-slate-700 shadow-sm">${escapeHtml(location.member)}</span></button>`}).join('')}
+function requestMyLocation(){if(!navigator.geolocation){showToast('This browser does not support location sharing.');return}showToast('Requesting location permission...');navigator.geolocation.watchPosition(async position=>{const payload={member:'Ryan',latitude:position.coords.latitude,longitude:position.coords.longitude};try{await fetch('/api/locations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});updateLiveMap(payload.latitude,payload.longitude);await loadLocations();showToast('Your live location is now shared with the group.')}catch(error){showToast('Location could not be synced right now.')}},{enableHighAccuracy:true,maximumAge:10000,timeout:10000},()=>{showToast('Location permission was not granted.')})}
+let demoLocationTimer=null;let demoLocationIndex=0;const demoLocations=[{latitude:3.1579,longitude:101.7123,label:'Hotel Maya KL'},{latitude:3.1572,longitude:101.7110,label:'Suria KLCC'},{latitude:3.1558,longitude:101.7142,label:'Aquaria KLCC'},{latitude:3.1502,longitude:101.7135,label:'Bukit Bintang'}];
+function toggleDemoLocation(button){if(demoLocationTimer){clearInterval(demoLocationTimer);demoLocationTimer=null;button.innerHTML='<i class="fa-solid fa-satellite-dish mr-2"></i>Start demo location';document.getElementById('locationSyncStatus').textContent='Live';showToast('Demo location stopped.');return}button.innerHTML='<i class="fa-solid fa-stop mr-2"></i>Stop demo location';document.getElementById('locationSyncStatus').textContent='Demo live';const pushDemoLocation=async()=>{const point=demoLocations[demoLocationIndex%demoLocations.length];demoLocationIndex+=1;try{await fetch('/api/locations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({member:'Ryan',latitude:point.latitude,longitude:point.longitude})});updateLiveMap(point.latitude,point.longitude);await loadLocations()}catch(error){document.getElementById('locationSyncStatus').textContent='Offline'}};pushDemoLocation();demoLocationTimer=setInterval(pushDemoLocation,4000);showToast('Demo location is moving through Kuala Lumpur.')}
+function openGoogleMaps(){const search=document.getElementById('mapSearch'),q=search?.value||'Kuala Lumpur';window.open('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q),'_blank')}
+function saveDates(){const a=document.getElementById('startDate').value,b=document.getElementById('endDate').value;if(a&&b){document.getElementById('dateSummary').textContent=new Date(a).toLocaleDateString('en-MY',{month:'short',day:'numeric'})+' – '+new Date(b).toLocaleDateString('en-MY',{month:'short',day:'numeric'});closeModal();showToast('Trip dates updated.');}}
+let travellers=3;
+function changeTravellers(n){travellers=Math.max(1,travellers+n);document.getElementById('adultCount').textContent=travellers}
+function setCurrency(c){document.getElementById('currencyLabel').textContent=c;closeModal();showToast('Currency changed to '+c+'.')}
+function createTrip(){const name=document.getElementById('newTripName').value.trim(),dest=document.getElementById('newTripDestination').value.trim();if(!name||!dest){showToast('Please enter a trip name and destination.');return}closeModal();showToast(name+' created for '+dest+'.')}
+function createActivity(){const name=document.getElementById('activityName').value.trim(),time=document.getElementById('activityTime').value,dur=document.getElementById('activityDuration').value||'1 hour';if(!name){showToast('Enter an activity name.');return}activityCount++;document.getElementById('activityCount').textContent=activityCount;document.getElementById('activityList').insertAdjacentHTML('beforeend',`<div class="flex gap-4 items-start"><span class="text-xs font-black text-slate-400 w-12 pt-1">${time}</span><div class="flex-1 bg-white border border-slate-200 p-4 rounded-2xl"><p class="font-black">${escapeHtml(name)}</p><p class="text-xs text-slate-500 font-bold mt-1">Activity • ${escapeHtml(dur)}</p></div></div>`);closeModal();showToast('Activity added to your plan.')}
+function addPlace(name){if(!places.includes(name)){places.push(name);renderPlaces();document.getElementById('savedCount').textContent=places.length+5;showToast(name+' added to itinerary.')}else showToast(name+' is already in your itinerary.')}
+function addTypedPlace(){const v=document.getElementById('placeInput').value.trim();if(v){addPlace(v);document.getElementById('placeInput').value='';focusMap(v)}}
+function addModalPlace(){const v=document.getElementById('modalPlace').value.trim();if(v){addPlace(v);closeModal();focusMap(v)}}
+function renderPlaces(){const list=document.getElementById('placeList');if(!list)return;list.innerHTML=places.map((p,i)=>`<div class="flex items-center justify-between p-3 rounded-xl ${i===0?'bg-indigo-50 border border-indigo-100':'bg-slate-50 border border-slate-100'}"><div class="flex items-center gap-3"><span class="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-indigo-600"><i class="fa-solid fa-location-dot text-xs"></i></span><span class="text-sm font-black">${escapeHtml(p)}</span></div><button onclick="focusMap('${escapeJs(p)}')" class="text-xs font-black text-indigo-600">Map</button></div>`).join('');if(document.getElementById('mapPlaceList'))renderTripMap()}
+const mapPlaces=[{name:'Hotel Maya KL',type:'Stay',distance:0,left:52,top:51,icon:'fa-hotel'},{name:'Suria KLCC',type:'Itinerary',distance:.8,left:68,top:36,icon:'fa-bag-shopping'},{name:'Aquaria KLCC',type:'Itinerary',distance:1.1,left:38,top:69,icon:'fa-fish'},{name:'Petronas Twin Towers',type:'Itinerary',distance:1.4,left:76,top:73,icon:'fa-building'},{name:'Bukit Bintang',type:'Itinerary',distance:2.2,left:30,top:34,icon:'fa-bag-shopping'},{name:'Central Market',type:'Itinerary',distance:3.1,left:24,top:78,icon:'fa-store'}];
+function renderTripMap(){const list=document.getElementById('mapPlaceList'),filter=document.getElementById('distanceFilter');if(!list)return;const visible=mapPlaces.filter(place=>place.distance<=Number(filter?.value||100));list.innerHTML=visible.map(place=>`<button onclick="selectMapPlace('${escapeJs(place.name)}')" class="w-full text-left flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100"><span class="w-9 h-9 rounded-lg ${place.type==='Stay'?'bg-emerald-100 text-emerald-700':'bg-indigo-100 text-indigo-700'} flex items-center justify-center"><i class="fa-solid ${place.icon} text-xs"></i></span><span class="flex-1"><strong class="block text-xs font-black">${escapeHtml(place.name)}</strong><small class="text-[10px] text-slate-400 font-bold">${escapeHtml(place.type)} • ${place.distance.toFixed(1)} km away</small></span></button>`).join('')||'<p class="text-sm text-slate-400 font-bold p-3">No stops in this range.</p>';document.getElementById('mapMarkerCount').textContent=visible.length+' places'}
+function selectMapPlace(name){const place=mapPlaces.find(item=>item.name===name);if(place)showToast(name+' selected • '+place.distance.toFixed(1)+' km from hotel.')}
+function uploadDocument(event){const file=event.target.files[0];if(!file)return;document.getElementById('documentList').insertAdjacentHTML('afterbegin',`<div class="p-5 flex items-center justify-between border-b border-slate-100"><div class="flex items-center gap-4"><div class="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="fa-solid fa-file"></i></div><div><p class="font-black">${escapeHtml(file.name)}</p><p class="text-xs text-slate-400 font-bold">You • ${(file.size/1024/1024).toFixed(1)} MB • Offline ready</p></div></div><button onclick="showToast('Document is ready offline.')" class="text-indigo-600 text-xs font-black">Open</button></div>`);document.getElementById('documentCount').textContent=Number(document.getElementById('documentCount').textContent)+1;event.target.value='';showToast(file.name+' uploaded for the group.')}
+let offlineMode=true;
+function toggleOfflineMode(){offlineMode=!offlineMode;document.getElementById('offlineStatus').textContent=offlineMode?'Ready':'Syncing';document.getElementById('offlineToggle').innerHTML=offlineMode?'<i class="fa-solid fa-wifi mr-2 text-emerald-600"></i>Offline ready':'<i class="fa-solid fa-rotate mr-2 text-amber-600"></i>Syncing';showToast(offlineMode?'Documents are available offline.':'Offline access paused.')}
+function updateChecklistProgress(){const tasks=[...document.querySelectorAll('#checklistItems input[type="checkbox"]')],complete=tasks.filter(task=>task.checked).length,total=tasks.length,pct=total?Math.round(complete/total*100):0;document.getElementById('checklistProgressLabel').textContent=complete+' of '+total+' complete';document.getElementById('checklistProgressPercent').textContent=pct+'%';document.getElementById('checklistProgressBar').style.width=pct+'%'}
+function toggleTask(input){const label=input.parentElement.querySelector('p');label.classList.toggle('line-through',input.checked);label.classList.toggle('text-slate-400',input.checked);input.parentElement.querySelector('span').textContent=input.checked?'Done':'Pending';updateChecklistProgress()}
+function saveTask(){const name=document.getElementById('taskName').value.trim(),assignee=document.getElementById('taskAssignee').value;if(!name){showToast('Enter a task name.');return}document.getElementById('checklistItems').insertAdjacentHTML('beforeend',`<div class="p-5 flex items-center gap-4 border-t border-slate-100"><input type="checkbox" onchange="toggleTask(this)" class="w-5 h-5 accent-emerald-600"><div class="flex-1"><p class="font-black">${escapeHtml(name)}</p><p class="text-xs text-slate-400 font-bold mt-1">Assigned to ${escapeHtml(assignee)} • Newly added</p></div><span class="text-xs font-black text-amber-600">Pending</span></div>`);updateChecklistProgress();closeModal();showToast('Task assigned to '+assignee+'.')}
+const dailyPlans={sep30:[['09:30','Arrive at KLIA & transfer to hotel','Airport transfer • 60–75 min'],['12:00','Hotel check-in & lunch in Bukit Bintang','Buffer time • 90 min'],['15:00','KLCC Park & Petronas Twin Towers','Walk from Suria KLCC • 2 hours'],['19:00','Dinner at Jalan Alor','Short Grab ride • 90 min']],oct1:[['08:30','Breakfast near the hotel','Easy start • 60 min'],['10:00','Batu Caves','Grab ride • 2 hours'],['13:00','Lunch in Little India, Brickfields','Meal break • 75 min'],['15:00','Central Market & Petaling Street','Walkable heritage area • 2.5 hours'],['19:30','Dinner and rest','Return to hotel • Flexible']],oct2:[['09:00','Breakfast and slow morning','Hotel • 60 min'],['10:30','Aquaria KLCC','Walk from hotel • 2 hours'],['13:00','Lunch at Suria KLCC','Meal break • 75 min'],['15:00','Bukit Bintang shopping','Walk and indoor backup • 2 hours'],['18:30','Pack and airport transfer','Leave a 3-hour airport buffer']]};
+function selectDay(btn){document.querySelectorAll('.day-tab').forEach(b=>{b.classList.remove('bg-indigo-600','text-white','active-day');b.classList.add('bg-slate-100','text-slate-500')});btn.classList.add('bg-indigo-600','text-white','active-day');btn.classList.remove('bg-slate-100','text-slate-500');const plan=dailyPlans[btn.dataset.day]||[];document.getElementById('activityList').innerHTML=plan.map((item,index)=>`<div class="flex gap-4 items-start"><span class="text-xs font-black text-slate-400 w-12 pt-1">${item[0]}</span><div class="flex-1 ${index===0?'bg-indigo-50 border border-indigo-100':'bg-white border border-slate-200'} p-4 rounded-2xl"><p class="font-black">${escapeHtml(item[1])}</p><p class="text-xs text-slate-500 font-bold mt-1">${escapeHtml(item[2])}</p></div></div>`).join('');showToast('Showing plan for '+btn.textContent)}
+function addExtraItineraryPlaces(){const heading=[...document.querySelectorAll('h3')].find(item=>item.textContent.trim()==='Trip places');if(!heading)return;const card=heading.closest('.card'),list=card?.querySelector('.space-y-2');if(!list||list.dataset.expanded)return;list.dataset.expanded='true';list.insertAdjacentHTML('beforeend',`<button onclick="focusItineraryLocation('Thean Hou Temple, Kuala Lumpur','Thean Hou Temple · Day 3 option')" class="w-full flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100 text-left"><span class="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center"><i class="fa-solid fa-place-of-worship"></i></span><span class="flex-1"><strong class="block text-xs font-black">Thean Hou Temple</strong><small class="text-[10px] text-slate-500 font-bold">Day 3 · 60–90 min</small></span><i class="fa-solid fa-chevron-right text-xs text-slate-300"></i></button><button onclick="focusItineraryLocation('Merdeka Square Kuala Lumpur','Merdeka Square · Day 2 option')" class="w-full flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100 text-left"><span class="w-9 h-9 rounded-xl bg-cyan-100 text-cyan-700 flex items-center justify-center"><i class="fa-solid fa-landmark"></i></span><span class="flex-1"><strong class="block text-xs font-black">Merdeka Square</strong><small class="text-[10px] text-slate-500 font-bold">Day 2 · Heritage stop</small></span><i class="fa-solid fa-chevron-right text-xs text-slate-300"></i></button><button onclick="focusItineraryLocation('Perdana Botanical Gardens Kuala Lumpur','Perdana Botanical Gardens · Day 3 option')" class="w-full flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100 text-left"><span class="w-9 h-9 rounded-xl bg-green-100 text-green-700 flex items-center justify-center"><i class="fa-solid fa-tree"></i></span><span class="flex-1"><strong class="block text-xs font-black">Perdana Botanical Gardens</strong><small class="text-[10px] text-slate-500 font-bold">Day 3 · Outdoor break</small></span><i class="fa-solid fa-chevron-right text-xs text-slate-300"></i></button>`);const count=card.querySelector('.text-indigo-600');if(count)count.textContent='8 stops'}
+let selectedRecovery='Pinang Peranakan Mansion';
+function selectRecovery(name){selectedRecovery=name;document.getElementById('recoveryStatus').textContent=name+' selected as the recovery venue.';showToast(name+' selected.')}
+function applyRecovery(){if(!places.includes(selectedRecovery)){places.push(selectedRecovery);document.getElementById('savedCount').textContent=places.length+5}document.getElementById('recoveryStatus').textContent=selectedRecovery+' added to the shared itinerary for all 4 members.';showToast('Re-route applied. Group itinerary updated.');}
+function saveBudget(){const v=parseFloat(document.getElementById('budgetInput').value);if(!v||v<1)return;budget=v;updateBudget();closeModal();showToast('Budget updated.')}
+function updateBudget(){const pct=Math.min(100,Math.round(spent/budget*100)),remaining=Math.max(0,budget-spent),average=spent/Math.max(1,document.querySelectorAll('#expenseList .expense-row').length);document.getElementById('budgetTotal').textContent=budget.toLocaleString();document.getElementById('budgetSpentLabel').textContent='RM '+spent.toLocaleString()+' spent';document.getElementById('budgetPercent').textContent=pct+'%';document.getElementById('budgetBar').style.width=pct+'%';document.getElementById('budgetSpent').textContent='RM '+spent.toLocaleString();document.getElementById('budgetRemaining').textContent='RM '+remaining.toLocaleString();document.getElementById('budgetPerPerson').textContent='RM '+Math.round(spent/3).toLocaleString();document.getElementById('analysisTotalSpent').textContent='RM '+spent.toLocaleString();document.getElementById('analysisAverage').textContent='RM '+Math.round(average).toLocaleString();document.getElementById('analysisRemaining').textContent='RM '+remaining.toLocaleString();document.getElementById('analysisRemainingPercent').textContent=Math.max(0,100-pct)+'% available';document.getElementById('analysisExpenseCount').textContent=document.querySelectorAll('#expenseList .expense-row').length}
+async function loadVotes(){try{const response=await fetch('/api/votes');if(!response.ok)throw new Error('Vote request failed');renderVotes(await response.json())}catch(error){showToast('Unable to load votes right now.')}}
+function renderVotes(data){
+    const renderOption=(id,groupIds,compact=false)=>{const option=data.options[id],groupTotal=groupIds.reduce((sum,groupId)=>sum+data.options[groupId].votes,0),percent=groupTotal?Math.round(option.votes/groupTotal*100):0;return `<button onclick="castVote('${id}')" class="vote-option w-full text-left ${compact?'p-4':'p-5'} rounded-2xl border border-slate-200 bg-slate-50 hover:border-emerald-400 hover:bg-emerald-50/40 transition"><div class="flex items-start justify-between gap-3"><div><p class="font-black">${escapeHtml(option.label)}</p><p class="text-xs text-slate-400 font-bold mt-1">${escapeHtml(option.detail)}</p></div><span class="text-sm font-black">${percent}%</span></div><div class="progress mt-3"><span style="width:${percent}%;background:#166534"></span></div><p class="text-[10px] text-slate-400 font-bold mt-2">${option.votes} ${option.votes===1?'vote':'votes'} · Tap to vote</p></button>`};
+    document.getElementById('lunchVoteOptions').innerHTML=['bistro','restaurant'].map(id=>renderOption(id,['bistro','restaurant'])).join('');
+    document.getElementById('nightVoteOptions').innerHTML=['night-market','beach-bar'].map(id=>renderOption(id,['night-market','beach-bar'],true)).join('');
+    document.getElementById('lunchVoteSummary').textContent=`${data.total_votes} votes recorded · Consensus updates live`;
+    document.getElementById('voteStatus').textContent=`${data.total_votes} votes recorded`;
+}
+async function castVote(optionId){if(localStorage.getItem('trippop-vote')){showToast('You have already voted in this round.');return}try{const response=await fetch('/api/votes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({option_id:optionId})});if(!response.ok)throw new Error('Vote request failed');localStorage.setItem('trippop-vote',optionId);renderVotes(await response.json());showToast('Your vote has been recorded.')}catch(error){showToast('Unable to submit your vote right now.')}}
+function saveExpense(){const name=document.getElementById('expenseName').value.trim(),amt=parseFloat(document.getElementById('expenseAmount').value);if(!name||!amt){showToast('Enter an expense name and amount.');return}spent+=amt;document.getElementById('expenseList').insertAdjacentHTML('afterbegin',`<div class="expense-row p-5 flex items-center justify-between border-b border-slate-100"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="fa-solid fa-receipt"></i></div><div><h5 class="font-black">${escapeHtml(name)}</h5><p class="text-xs text-slate-400 font-bold">Other • Paid by Ryan • Today</p></div></div><p class="font-black">RM ${amt.toFixed(2)}</p></div>`);updateBudget();closeModal();showToast('Expense added.')}
+function commitSplitExpense(){const amount=25.50;spent+=amount;document.getElementById('expenseList').insertAdjacentHTML('afterbegin',`<div class="expense-row p-5 flex items-center justify-between border-b border-slate-100"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center"><i class="fa-solid fa-receipt"></i></div><div><h5 class="font-black">Kedai Kopi Ping Hooi</h5><p class="text-xs text-slate-400 font-bold">Food • Split Studio • Paid by Ryan</p></div></div><p class="font-black">RM ${amount.toFixed(2)}</p></div>`);updateBudget();showSection('budget');showToast('Receipt added to the trip budget. Settlement updated.')}
+function selectPayer(name,button){document.querySelectorAll('.payer-card').forEach(b=>b.classList.remove('border-indigo-500','border-2','bg-indigo-50'));button.classList.add('border-indigo-500','border-2','bg-indigo-50');showToast(name+' selected as payer.')}
+function setSplitMode(btn){const parent=btn.parentElement;parent.querySelectorAll('.split-mode').forEach(b=>{b.classList.remove('bg-indigo-600','text-white');b.classList.add('bg-white','border','border-slate-200')});btn.classList.add('bg-indigo-600','text-white');btn.classList.remove('bg-white','border','border-slate-200');showToast(btn.textContent+' split applied.')}
+function addSplitItem(){document.getElementById('splitItems').insertAdjacentHTML('beforeend',`<div class="bg-slate-50 p-4 rounded-2xl border border-slate-200"><div class="flex justify-between gap-3"><input placeholder="Item name" class="soft-input rounded-lg p-2 text-sm font-bold flex-1"><input placeholder="RM" type="number" class="soft-input rounded-lg p-2 text-sm font-bold w-24"></div><div class="flex gap-2 mt-3"><button class="split-mode px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-[10px] font-black" onclick="setSplitMode(this)">Equal</button><button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-[10px] font-black" onclick="this.closest('.bg-slate-50').remove()">Remove</button></div></div>`)}
+function previewReceipt(e){const file=e.target.files[0];if(!file)return;const url=URL.createObjectURL(file);document.getElementById('receiptPreview').src=url;showToast('Receipt image uploaded. OCR preview ready.')}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function escapeJs(s){return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'")}
+
+updateBudget();
+</script>
+</body>
+</html>
