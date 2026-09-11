@@ -4,14 +4,13 @@
 Group travel planning often leads to chaotic communication and manual expense tracking. Our main stakeholders are group travelers and independent explorers seeking seamless coordination. Existing apps like Wanderlog handle basic itinerary building well but fall short in collaboration: they lack built-in voting for group decisions and automated expense splitting, forcing users to juggle multiple apps like WhatsApp for debates and Splitwise for bills.
 
 **Our Solution.** What it is in 3-4 sentences, then list out your feature-set.
-TripPOP is a collaborative social travel platform designed to eliminate the logistical friction of group trips. We consolidate interactive itinerary building, real-time group voting, and automated financial tracking into a single unified dashboard. By integrating AI for instant receipt scanning, smart weather adaptations, and a social discovery feed, it transforms travel coordination from an administrative chore into a shared adventure.
+TripPOP is a collaborative travel platform designed to eliminate the logistical friction of group trips. We consolidate interactive itinerary building, real-time group voting, and automated financial tracking into a single unified dashboard. By integrating AI for instant receipt scanning, smart weather adaptations, and real-time group location tracking, it transforms travel coordination from an administrative chore into a seamless shared adventure.
 
 **Feature-Set:**
 *   **Democratic Group Voting:** Built-in polls for members to propose and agree on destinations without messy group chats.
 *   **AI Vision Receipt Splitter:** Uses the Gemini Multimodal API to scan physical receipts, automatically extracting items and costs for instant group expense splitting.
-*   **Collaborative Itinerary & Live Map:** A shared, real-time timeline where all group members can view and edit the daily schedule together, alongside real-time friend location tracking.
+*   **Collaborative Itinerary & Live Map:** A shared, real-time timeline where all group members can view and edit the daily schedule together, alongside real-time friend location tracking to prevent anyone from getting lost.
 *   **Smart Disruption Response:** Automatically suggests viable alternative plans (e.g., indoor activities) when sudden weather changes affect the itinerary.
-*   **Social Travel Feed:** A community hub to share visual trip logs, discover new spots, and clone peers' itineraries.
 
 ## 2. Ideation & Process
 
@@ -21,9 +20,10 @@ TripPOP is a collaborative social travel platform designed to eliminate the logi
 | :--- | :--- |
 | **AI Vision Receipt Splitter (Gemini API)** | **Kept.** Solves the biggest friction in group travel (money arguments). Highly feasible with Gemini's Multimodal API and adds strong technical value. |
 | **Democratic Group Voting System** | **Kept.** Directly addresses decision paralysis in group chats. Low technical complexity but extremely high value for user experience. |
-| **Social Travel Feed & Cloneable Itineraries** | **Kept.** Provides inspiration and user retention. Allows users to easily copy successful trips instead of planning from scratch. |
+| **Live Group Location Tracking** | **Kept.** Eliminates the constant "where are you?" texts during free-and-easy itinerary blocks by showing members directly on the shared trip map. |
+| **Social Travel Feed & Cloneable Itineraries** | **Dropped.** We decided to pivot away from social networking features to maintain a strict focus on utility and logistics (planning, money, location) for our MVP. |
+| **In-App Group Chat** | **Dropped.** Users already use established messaging apps like WhatsApp/Telegram. Forcing them to use another chat interface creates friction; our voting and live map features solve coordination without needing a chat module. |
 | **Real-time Flight & Hotel Price Aggregator** | **Dropped.** Third-party flight APIs (like Amadeus/Skyscanner) are expensive and rate-limited. It shifts focus away from our core goal (group coordination) to booking, which is already saturated. |
-| **AI Virtual Voice Tour Guide** | **Dropped.** Scope creep. It doesn't solve the logistical pain points of group planning and competes directly with existing mature tools like Google Lens/Maps. |
 
 **2.2 Ideation Boards**
 *(Insert your mindmaps, SCAMPER grids, or flowcharts here)*
@@ -69,14 +69,14 @@ TripPOP is a collaborative social travel platform designed to eliminate the logi
 
 ## 4. What Makes It Different
 
-Unlike traditional travel apps that force users to jump between different tools for planning, chatting, and splitting bills, TripPOP creates a seamless, unified ecosystem. Here is what makes our approach novel:
+Unlike traditional travel apps that force users to jump between different tools for planning, chatting, and splitting bills, TripPOP creates a seamless, utility-driven ecosystem. Here is what makes our approach novel:
 
 *   **AI Vision Expense Splitting (The Twist):**
     Instead of manually typing every receipt item into an app like Splitwise, users simply snap a photo. By leveraging the Gemini Multimodal API, our app instantly parses line items, prices, and currencies, directly integrating the split costs into the group's travel dashboard.
 *   **Actionable Democratic Voting (The Twist):**
     Most groups debate on WhatsApp and then manually update a planner. Our twist is native polling: members vote on destinations within the app, and the winning location is automatically scheduled and routed in the shared itinerary.
-*   **One-Click Itinerary Cloning (The Twist):**
-    Moving beyond static TripAdvisor text reviews, we offer a Xiaohongshu-style visual feed. The novel twist is that users can instantly "clone" a peer's successful itinerary—including routes and budget estimates—directly into their own workspace to modify.
+*   **Live Group Logistics (The Twist):**
+    Instead of relying on fragmented communication to coordinate meetups, our live map integrates friend locations directly beside the itinerary stops. You always know if someone is falling behind schedule without having to text them.
 
 **Competitor Comparison**
 
@@ -85,7 +85,7 @@ Unlike traditional travel apps that force users to jump between different tools 
 | Collaborative Itinerary | ✅ | ✅ | ❎ |
 | Native Group Voting | ✅ | ❎ | ❎ |
 | AI Receipt Scanning | ✅ | ❎ | ❎ |
-| Visual Cloneable Discovery Feed | ✅ | ❎ (Text heavy) | ❎ (Listings only) |
+| Live Friend Tracking | ✅ | ❎ | ❎ |
 | Integrated Bill Splitting | ✅ | ❎ | ❎ |
 
 ## 5. Technical Architecture & Feasibility
@@ -104,6 +104,7 @@ Unlike traditional travel apps that force users to jump between different tools 
 **APIs & External Services:**
 *   **Gemini Multimodal API:** Our core engine to parse uploaded receipt images into itemized, structured JSON data for the bill splitter. *Constraint:* We must write fallback logic in case the AI hallucinates or misreads a blurry price.
 *   **Google Maps API:** Used for plotting collaborative locations and calculating routes. *Constraint:* Requires strict API key restrictions (HTTP referrers) in the Google Cloud Console to prevent quota theft.
+*   **Geolocation API (Browser/Client):** Used to fetch the user's real-time coordinates to broadcast to the group map. *Constraint:* Requires explicit user permission, and battery drain can be an issue if polled too frequently.
 
 **Hosting: Render.**
 *   *Why:* Render offers a free tier for web services with seamless GitHub integration for automatic deployments.
@@ -111,4 +112,4 @@ Unlike traditional travel apps that force users to jump between different tools 
 
 **Build plan & scope**
 During the build phase, our scope will strictly focus on a Minimum Viable Product (MVP) to ensure realistic completion.
-*What we will build:* A functioning Flask backend connected to Supabase for data persistence. A clean Tailwind/HTMX interface where users can create a trip, search and pin locations via the Maps API, and upload a sample receipt to the Gemini API to demonstrate the automated expense splitting.
+*What we will build:* A functioning Flask backend connected to Supabase for data persistence. A clean Tailwind/HTMX interface where users can create a trip, search and pin locations via the Maps API, test live location broadcasting, and upload a sample receipt to the Gemini API to demonstrate the automated expense splitting.
