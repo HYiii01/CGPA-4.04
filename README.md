@@ -1,3 +1,13 @@
+# TripPOP by CGPA 4.04
+Team: TEH HAO YI, GOH KAI YAO
+
+Problem Statement: Travel Planner
+
+Video Presentation: https://youtu.be/IO3qCMofT3o
+
+Presentation Slides: https://canva.link/g6dp8o2htpf0ued
+
+
 # 1. Project Overview
 
 **The Problem.** State the causes as you understand them, who the stakeholders are and briefly mention what similar apps exist in the market (at least one) and why they fall short.
@@ -26,17 +36,24 @@ TripPOP is a collaborative travel platform designed to eliminate the logistical 
 | **Real-time Flight & Hotel Price Aggregator** | **Dropped.** Third-party flight APIs (like Amadeus/Skyscanner) are expensive and rate-limited. It shifts focus away from our core goal (group coordination) to booking, which is already saturated. |
 
 **2.2 Ideation Boards**
-*(Insert your mindmaps, SCAMPER grids, or flowcharts here)*
+![AI Receipt Scanner](image/AI Receipt Scanner User Flow.drawio.png)
+![AI Alert Flowchart](image/AI_Alert_Flowchart.drawio.png)
+![AI_Planner](image/AI_Planner.drawio.png)
+![Real-Time Location Map](image/Real-Time Location Map.drawio.png)
+![Voting System](image/AI Receipt Scanner User Flow.drawio.png)
+![prototype1.png](image/prototype1.png)
+![prototype2.png](image/prototype2.png)
+
 
 **2.3 Mentor Consultation**
 
 | Date | Mentor | Feedback Received | What Was Changed |
 | :--- | :--- | :--- | :--- |
-| *(Fill)* | *(Fill)* | *(Fill)* | *(Fill)* |
+| *9 Sep 2026(20:55 PM)* | *Chua Zhu Heng* | *The in-app chat and social media sharing features are unnecessary because users will default to WhatsApp and Xiaohongshu.* | *We completely removed the chat and social feed ideas to focus purely on travel logistics (budgeting, tracking, and AI alerts).* |
 
 ## 3. Design & Prototype
 
-**UI Prototype:** 
+UI Prototype: https://canva.link/n0hnakhthnkh0kr
 
 **1. Home Dashboard & AI Assistant**
 ![Home Dashboard](Screenshot 2026-09-11 143645.jpg)
