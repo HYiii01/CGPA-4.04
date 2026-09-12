@@ -63,32 +63,24 @@ TripPOP is a collaborative travel platform designed to eliminate the logistical 
 UI Prototype: https://canva.link/n0hnakhthnkh0kr
 
 **1. Home Dashboard & AI Assistant**
-![Home Dashboard](Screenshot 2026-09-11 143645.jpg)
-![AI Assistant Prompt](Screenshot 2026-09-11 142818.png)
 *The main landing page allows users to view their saved collaborative trips or instantly generate a new plan using the AI assistant prompt.*
 
 **2. Collaborative Itinerary**
-![Collaborative Itinerary](Screenshot 2026-09-11 143710.jpg)
 *A shared workspace where all group members can view the daily schedule, add activities, and preview location markers on an interactive map.*
 
 **3. Live Trip Map & Tracking**
-![Live Trip Map](Screenshot 2026-09-11 143723.png)
 *Real-time map tracking to locate friends and see how far they are from upcoming itinerary stops, reducing the "where are you?" texts.*
 
 **4. Democratic Voting System**
-![Voting System](Screenshot 2026-09-11 143852.png)
 *An active polling dashboard where members vote on activities (e.g., lunch spots or night markets). Consensus automatically updates the live itinerary.*
 
 **5. Smart Disruption Response**
-![Disruption Response](Screenshot 2026-09-11 143749.png)
 *Dynamic re-routing alerts that notify the group of issues (like heavy rain) and instantly suggest indoor alternatives to keep the trip on track.*
 
 **6. Budgeting Dashboard**
-![Budgeting Dashboard](Screenshot 2026-09-11 143738.png)
 *A financial overview that breaks down category spending and tracks total group expenses against the set trip budget.*
 
 **7. Split Studio (AI Receipt Scanner)**
-![Split Studio](Screenshot 2026-09-11 143838.jpg)
 *Using AI vision, users can upload a receipt. The system automatically extracts line items, assigns costs to specific group members, and calculates settlements.*
 
 ## 4. What Makes It Different
