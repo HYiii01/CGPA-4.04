@@ -11,7 +11,7 @@ Presentation Slides: https://canva.link/g6dp8o2htpf0ued
 # 1. Project Overview
 
 **The Problem.** State the causes as you understand them, who the stakeholders are and briefly mention what similar apps exist in the market (at least one) and why they fall short.
-Group travel planning often leads to chaotic communication and manual expense tracking. Our main stakeholders are group travelers and independent explorers seeking seamless coordination. Existing apps like Wanderlog handle basic itinerary building well but fall short in collaboration: they lack built-in voting for group decisions and automated expense splitting, forcing users to juggle multiple apps like WhatsApp for debates and Splitwise for bills.
+Group travel planning often leads to chaotic communication and manual expense splitting. Our main stakeholders are group travelers and independent explorers seeking seamless coordination. Existing apps like Wanderlog handle basic itinerary building well but fall short in collaboration: they lack built-in voting for group decisions and automated expense splitting, forcing users to juggle multiple apps like WhatsApp for debates and Splitwise for bills.
 
 **Our Solution.** What it is in 3-4 sentences, then list out your feature-set.
 TripPOP is a collaborative travel platform designed to eliminate the logistical friction of group trips. We consolidate interactive itinerary building, real-time group voting, and automated financial tracking into a single unified dashboard. By integrating AI for instant receipt scanning, smart weather adaptations, and real-time group location tracking, it transforms travel coordination from an administrative chore into a seamless shared adventure.
@@ -36,20 +36,27 @@ TripPOP is a collaborative travel platform designed to eliminate the logistical 
 | **Real-time Flight & Hotel Price Aggregator** | **Dropped.** Third-party flight APIs (like Amadeus/Skyscanner) are expensive and rate-limited. It shifts focus away from our core goal (group coordination) to booking, which is already saturated. |
 
 **2.2 Ideation Boards**
-![AI Receipt Scanner](image/AI Receipt Scanner User Flow.drawio.png)
-![AI Alert Flowchart](image/AI_Alert_Flowchart.drawio.png)
-![AI_Planner](image/AI_Planner.drawio.png)
-![Real-Time Location Map](image/Real-Time Location Map.drawio.png)
-![Voting System](image/AI Receipt Scanner User Flow.drawio.png)
-![prototype1.png](image/prototype1.png)
-![prototype2.png](image/prototype2.png)
+
+![AI Receipt Scanner](Image/AI_Receipt_Scanner.png)
+
+![AI Alert Flowchart](Image/AI_Alert_Flowchart.drawio.png)
+
+![AI_Planner](Image/AI_Planner.drawio.png)
+
+![Real-Time Location Map](Image/Real-Time_Location_Map.drawio.png)
+
+![Voting System](Image/Voting_System_Flow.drawio.png)
+
+![prototype1.png](Image/prototype1.png)
+
+![prototype2.png](Image/prototype2.png)
 
 
 **2.3 Mentor Consultation**
 
 | Date | Mentor | Feedback Received | What Was Changed |
 | :--- | :--- | :--- | :--- |
-| *9 Sep 2026(20:55 PM)* | *Chua Zhu Heng* | *The in-app chat and social media sharing features are unnecessary because users will default to WhatsApp and Xiaohongshu.* | *We completely removed the chat and social feed ideas to focus purely on travel logistics (budgeting, tracking, and AI alerts).* |
+| *9 Sep 2026 (20:55 PM)* | *Chua Zhu Heng* | *The in-app chat and social media sharing features are unnecessary because users will default to WhatsApp and Xiaohongshu.* | *We completely removed the chat and social feed ideas to focus purely on travel logistics (budgeting, tracking, and AI alerts).* |
 
 ## 3. Design & Prototype
 
